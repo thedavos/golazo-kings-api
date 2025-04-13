@@ -2,24 +2,23 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe, VersioningType } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
-import { ConfigService } from '@nestjs/config';
+import { ConfigService, ConfigType } from '@nestjs/config';
+import appConfigType from '@config/app.config';
+import swaggerConfigType from '@config/swagger.config';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = new ConfigService();
 
-  const port = configService.get<number>('PORT', 3000);
-  const apiPrefix = configService.get<string>('API_PREFIX', 'api');
-  const defaultApiVersion = configService.get<string>(
-    'DEFAULT_API_VERSION',
-    '1',
-  );
+  const appConfig = configService.get<ConfigType<typeof appConfigType>>('app');
+  const swaggerConfig =
+    configService.get<ConfigType<typeof swaggerConfigType>>('swagger');
 
-  app.setGlobalPrefix(apiPrefix);
+  app.setGlobalPrefix(appConfig?.apiPrefix as string);
 
   app.enableVersioning({
     type: VersioningType.URI,
-    defaultVersion: defaultApiVersion,
+    defaultVersion: appConfig?.defaultApiVersion,
   });
 
   app.useGlobalPipes(
@@ -31,33 +30,24 @@ async function bootstrap() {
   );
 
   app.enableCors({
-    origin: configService.get<string>('CORS_ORIGIN')?.split(','),
-    methods: configService.get<string>('CORS_METHODS')?.split(','),
-    credentials: configService.get<boolean>('CORS_CREDENTIALS'),
+    origin: appConfig?.cors.origin,
+    methods: appConfig?.cors.methods,
+    credentials: appConfig?.cors.credentials,
   });
 
-  if (configService.get<boolean>('SWAGGER_ENABLED')) {
+  if (swaggerConfig?.enabled) {
     const config = new DocumentBuilder()
-      .setTitle(configService.get<string>('SWAGGER_TITLE', 'GolazoKings API'))
-      .setDescription(
-        configService.get<string>(
-          'SWAGGER_DESCRIPTION',
-          'API para la plataforma GolazoKings',
-        ),
-      )
-      .setVersion(configService.get<string>('SWAGGER_VERSION', '1.0'))
+      .setTitle(swaggerConfig.title)
+      .setDescription(swaggerConfig.description)
+      .setVersion(swaggerConfig.version)
       .addBearerAuth()
       .build();
 
     const documentFactory = () => SwaggerModule.createDocument(app, config);
-    SwaggerModule.setup(
-      configService.get<string>('SWAGGER_PATH', 'api/docs'),
-      app,
-      documentFactory,
-    );
+    SwaggerModule.setup(swaggerConfig.path, app, documentFactory);
   }
 
-  await app.listen(port);
+  await app.listen(appConfig?.port as number);
 }
 
 void bootstrap();
