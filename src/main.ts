@@ -8,7 +8,7 @@ import swaggerConfigType from '@config/swagger.config';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  const configService = new ConfigService();
+  const configService = app.get(ConfigService);
 
   const appConfig = configService.get<ConfigType<typeof appConfigType>>('app');
   const swaggerConfig =
@@ -40,7 +40,6 @@ async function bootstrap() {
       .setTitle(swaggerConfig.title)
       .setDescription(swaggerConfig.description)
       .setVersion(swaggerConfig.version)
-      .addBearerAuth()
       .build();
 
     const documentFactory = () => SwaggerModule.createDocument(app, config);

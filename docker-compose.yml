@@ -1,0 +1,45 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: golazo_kings_mysql
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    restart: always
+    environment:
+      - MYSQL_ROOT_PASSWORD=${DB_ROOT_PASSWORD}
+      - MYSQL_DATABASE=${DB_DATABASE}
+      - MYSQL_USER=${DB_USERNAME}
+      - MYSQL_PASSWORD=${DB_PASSWORD}
+      - MYSQL_AUTHENTICATION_PLUGIN=caching_sha2_password
+    ports:
+      - "${DB_PORT:-3306}:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysql", "--user=${DB_USERNAME}", "--password=${DB_PASSWORD}", "-e", "SELECT 1;"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - golazo_network
+
+  adminer:
+    image: adminer:latest
+    container_name: golazo_kings_adminer
+    restart: always
+    ports:
+      - "8080:8080"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - golazo_network
+
+volumes:
+  mysql_data:
+    name: golazo_kings_mysql_data
+
+networks:
+  golazo_network:
+    name: golazo_kings_network
+    driver: bridge
