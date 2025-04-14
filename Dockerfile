@@ -18,7 +18,7 @@ FROM base AS development
 ENV NODE_ENV=development
 
 # Install all dependencies (including dev dependencies)
-RUN npm ci --prefer-offline --no-audit
+RUN npm ci
 
 # Copy source code and config files
 COPY . .
@@ -36,7 +36,7 @@ ENV NODE_ENV=production
 
 # Install production dependencies only
 # Using npm install instead of npm ci to avoid strict package-lock dependency
-RUN npm install --prefer-offline --no-audit
+RUN npm install
 
 # Copy built application from development stage
 COPY --from=development /app/dist ./dist
