@@ -1,65 +1,70 @@
-# --------------> Base stage
-FROM node:20-alpine AS base
+# Build stage
+FROM node:20-alpine AS builder
 
-# Create app directory
-WORKDIR /usr/src/app
+# Set working directory
+WORKDIR /app
 
-# Add build essentials for packages that may need compilation
-RUN apk add --no-cache python3 make g++ git
-
-# Install PNPM globally
+# Install PNPM
 RUN npm install -g pnpm
 
 # Copy package files
-COPY package.json pnpm-lock.yaml ./
+COPY package.json pnpm-lock.yaml* ./
 
-# Set common environment variables
-ENV NODE_ENV=production
-ENV TZ=UTC
-ENV PNPM_HOME="/usr/src/app/.pnpm"
-ENV PATH="$PNPM_HOME:$PATH"
-
-# --------------> Development stage
-FROM base AS development
-# Override NODE_ENV for development
-ENV NODE_ENV=development
-
-# Install all dependencies (including dev dependencies)
+# Install ALL dependencies (including dev dependencies)
 RUN pnpm install --frozen-lockfile
 
-# Copy source code and config files
+# Copy source code
 COPY . .
 
 # Build the application
 RUN pnpm run build
 
-# Start in development mode by default
-CMD ["npm", "run", "start:dev"]
+# Development stage
+FROM node:20-alpine AS development
 
-# --------------> Production stage
-FROM base AS production
+# Set working directory
+WORKDIR /app
 
-# Ensure NODE_ENV is production
-ENV NODE_ENV=production
+# Install PNPM
+RUN npm install -g pnpm
 
-# Install app dependencies
-RUN pnpm install --frozen-lockfile --prod
+# Copy package files
+COPY package.json pnpm-lock.yaml* ./
 
-# Bundle app source
+# Install ALL dependencies (including dev dependencies)
+ENV NODE_ENV=development
+RUN pnpm install --frozen-lockfile
+
+# Copy source code
 COPY . .
 
-# Creates a "dist" folder with the production build
-RUN pnpm run build
-
-# Copy only the necessary files
-# 1. First, copy the built application from the development stage
-COPY --from=development /usr/src/app/dist ./dist
-# 2. Copy other necessary runtime files
-COPY --from=development /usr/src/app/nest-cli.json .
-COPY --from=development /usr/src/app/tsconfig*.json ./
-
-# Expose the port on which the app will run
+# Expose application port
 EXPOSE 3000
 
-# Start the server using the production build
+# Start app in development mode (with hot-reload)
+CMD ["pnpm", "run", "start:dev"]
+
+# Production stage
+FROM node:20-alpine AS production
+
+# Set working directory
+WORKDIR /app
+
+# Install PNPM
+RUN npm install -g pnpm
+
+# Copy package files
+COPY package.json pnpm-lock.yaml* ./
+
+# Install production dependencies only
+ENV NODE_ENV=production
+RUN pnpm install --prod --frozen-lockfile
+
+# Copy built application from builder stage
+COPY --from=builder /app/dist ./dist
+
+# Expose application port
+EXPOSE 3000
+
+# Start the application
 CMD ["node", "dist/main"]
