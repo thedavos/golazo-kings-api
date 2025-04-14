@@ -18,6 +18,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
         entities: configService.get('database.entities'),
         synchronize: configService.get('database.synchronize'),
         logging: configService.get('database.logging'),
+        autoLoadEntities: true,
       }),
     }),
   ],
