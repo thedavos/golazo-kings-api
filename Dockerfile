@@ -18,7 +18,7 @@ FROM base AS development
 ENV NODE_ENV=development
 
 # Install all dependencies (including dev dependencies)
-RUN npm ci
+RUN npm install
 
 # Copy source code and config files
 COPY . .
@@ -33,10 +33,6 @@ CMD ["npm", "run", "start:dev"]
 FROM base AS production
 # Ensure NODE_ENV is production
 ENV NODE_ENV=production
-
-# Install production dependencies only
-# Using npm install instead of npm ci to avoid strict package-lock dependency
-RUN npm install
 
 # Copy built application from development stage
 COPY --from=development /app/dist ./dist
