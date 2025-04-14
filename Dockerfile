@@ -31,7 +31,7 @@ RUN pnpm install --frozen-lockfile
 COPY . .
 
 # Build the application
-RUN npm run build
+RUN pnpm run build
 
 # Start in development mode by default
 CMD ["npm", "run", "start:dev"]
@@ -49,7 +49,7 @@ RUN pnpm install --frozen-lockfile --prod
 COPY . .
 
 # Creates a "dist" folder with the production build
-RUN npm run build
+RUN pnpm run build
 
 # Copy only the necessary files
 # 1. First, copy the built application from the development stage
