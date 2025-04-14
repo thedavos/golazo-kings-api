@@ -1,11 +1,13 @@
 # --------------> Base stage
 FROM node:20-alpine AS base
-WORKDIR /app
+
+# Create app directory
+WORKDIR /usr/src/app
 
 # Add build essentials for packages that may need compilation
 RUN apk add --no-cache python3 make g++ git
 
-# Copy package files
+# A wildcard is used to ensure both package.json AND package-lock.json are copied
 COPY package*.json ./
 
 # Set common environment variables
@@ -31,26 +33,21 @@ CMD ["npm", "run", "start:dev"]
 
 # --------------> Production stage
 FROM base AS production
+
 # Ensure NODE_ENV is production
 ENV NODE_ENV=production
 
-# Copy built application from development stage
-COPY --from=development /app/dist ./dist
+# Install app dependencies
+RUN npm ci
 
-# Create a non-root user
-RUN addgroup -g 1001 -S nodejs && \
-    adduser -S nestjs -u 1001 && \
-    chown -R nestjs:nodejs /app
+# Bundle app source
+COPY . .
 
-# Switch to non-root user for security
-USER nestjs
+# Creates a "dist" folder with the production build
+RUN npm run build
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s \
-    CMD wget -q --spider http://localhost:3000/health || exit 1
-
-# Expose port
+# Expose the port on which the app will run
 EXPOSE 3000
 
-# Start application
-CMD ["node", "dist/main"]
+# Start the server using the production build
+CMD ["npm", "run", "start:prod"]
