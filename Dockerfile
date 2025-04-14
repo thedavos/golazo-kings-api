@@ -6,7 +6,7 @@ WORKDIR /app
 RUN apk add --no-cache python3 make g++ git
 
 # Copy package files
-COPY package.json package-lock.json ./
+COPY package*.json ./
 
 # Set common environment variables
 ENV NODE_ENV=production
