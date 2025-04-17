@@ -4,6 +4,10 @@ FROM node:20
 # Create app directory
 WORKDIR /usr/src/app
 
+# Install PNPM globally
+# Install PNPM
+RUN npm install -g pnpm
+
 # A wildcard is used to ensure both package.json AND package-lock.json are copied
 COPY package*.json ./
 COPY pnpm-*.yaml* ./
