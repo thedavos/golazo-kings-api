@@ -9,7 +9,7 @@ COPY package*.json ./
 COPY pnpm-*.yaml* ./
 
 # Install app dependencies
-RUN npm ci
+RUN pnpm install --frozen-lockfile
 
 # Bundle app source
 COPY . .
