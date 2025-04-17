@@ -1,11 +1,11 @@
+Dockerfile
+ .dockerignore
 node_modules
 npm-debug.log
+Dist
 dist
 .git
 .env*
 *.md
 .vscode
 .gitignore
-.dockerignore
-Dockerfile
-Dist
