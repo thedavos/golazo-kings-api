@@ -1,5 +1,5 @@
-# Base image
-FROM node:20
+# BASE STAGE
+FROM node:20 AS base
 
 # Create app directory
 WORKDIR /usr/src/app
@@ -20,6 +20,18 @@ COPY . .
 
 # Creates a "dist" folder with the production build
 RUN npm run build
+
+# DEVELOPMENT STAGE
+FROM base AS development
+
+ENV NODE_ENV=development
+
+CMD ["npm", "run", "start:dev"]
+
+# PRODUCTION STAGE
+FROM base AS production
+
+ENV NODE_ENV=production
 
 # Expose the port on which the app will run
 EXPOSE 3000

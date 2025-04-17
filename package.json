@@ -21,11 +21,7 @@
     "docker:dev:up": "docker-compose --env-file .env.development -f docker-compose.yml -f docker-compose.dev.yml up -d",
     "docker:dev:down": "docker-compose --env-file .env.development -f docker-compose.yml -f docker-compose.dev.yml down",
     "docker:dev:build": "docker-compose --env-file .env.development -f docker-compose.yml -f docker-compose.dev.yml build",
-    "docker:dev:logs": "docker-compose --env-file .env.development -f docker-compose.yml -f docker-compose.dev.yml logs -f",
-    "docker:prod:up": "docker-compose --env-file .env.production -f docker-compose.yml -f docker-compose.prod.yml up -d",
-    "docker:prod:down": "docker-compose --env-file .env.production -f docker-compose.yml -f docker-compose.prod.yml down",
-    "docker:prod:build": "docker-compose --env-file .env.production -f docker-compose.yml -f docker-compose.prod.yml build",
-    "docker:prod:logs": "docker-compose --env-file .env.production -f docker-compose.yml -f docker-compose.prod.yml logs -f"
+    "docker:dev:logs": "docker-compose --env-file .env.development -f docker-compose.yml -f docker-compose.dev.yml logs -f"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
