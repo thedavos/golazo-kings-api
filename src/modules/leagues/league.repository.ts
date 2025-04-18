@@ -21,7 +21,7 @@ export class LeagueRepository {
     });
   }
 
-  async findById(id: string): Promise<League | null> {
+  async findById(id: number): Promise<League | null> {
     return await this.repository.findOne({
       where: { id },
       relations: ['seasons'],
@@ -35,12 +35,12 @@ export class LeagueRepository {
     });
   }
 
-  async update(id: string, data: Partial<League>): Promise<League> {
+  async update(id: number, data: Partial<League>): Promise<League> {
     await this.repository.update(id, data);
     return (await this.findById(id)) as League;
   }
 
-  async delete(id: string): Promise<void> {
+  async delete(id: number): Promise<void> {
     await this.repository.delete(id);
   }
 }

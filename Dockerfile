@@ -19,7 +19,7 @@ RUN pnpm install --frozen-lockfile
 COPY . .
 
 # Copy the entrypoint script
-COPY --chown=node:node entrypoint.sh /usr/local/bin/
+COPY --chown=node:node scripts/entrypoint.sh /usr/local/bin/
 
 # Make the entrypoint script executable
 RUN chmod +x /usr/local/bin/entrypoint.sh

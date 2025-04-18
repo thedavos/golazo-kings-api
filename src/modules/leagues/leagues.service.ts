@@ -4,8 +4,8 @@ import {
   ConflictException,
 } from '@nestjs/common';
 import { LeagueRepository } from '@modules/leagues/league.repository';
-import { CreateLeagueDto } from '@modules/leagues/dtos/create-league.dto';
-import { UpdateLeagueDto } from '@modules/leagues/dtos/update-league.dto';
+import { CreateLeagueDto } from '@modules/leagues/dto/create-league.dto';
+import { UpdateLeagueDto } from '@modules/leagues/dto/update-league.dto';
 import { League } from '@modules/leagues/domain/entities/league.entity';
 import slugify from '@common/utils/slugify.utils';
 
@@ -35,7 +35,7 @@ export class LeaguesService {
     return await this.leagueRepository.findAll();
   }
 
-  async findOne(id: string): Promise<League> {
+  async findOne(id: number): Promise<League> {
     const league = await this.leagueRepository.findById(id);
     if (!league) {
       throw new NotFoundException(`Liga con ID ${id} no encontrada`);
@@ -46,6 +46,7 @@ export class LeaguesService {
 
   async findBySlug(slug: string): Promise<League> {
     const league = await this.leagueRepository.findBySlug(slug);
+
     if (!league) {
       throw new NotFoundException(`Liga con slug ${slug} no encontrada`);
     }
@@ -53,12 +54,12 @@ export class LeaguesService {
     return league;
   }
 
-  async update(id: string, updateLeagueDto: UpdateLeagueDto): Promise<League> {
+  async update(id: number, updateLeagueDto: UpdateLeagueDto): Promise<League> {
     await this.findOne(id); // Verifica que existe
     return await this.leagueRepository.update(id, updateLeagueDto);
   }
 
-  async remove(id: string): Promise<void> {
+  async remove(id: number): Promise<void> {
     await this.findOne(id); // Verifica que existe
     await this.leagueRepository.delete(id);
   }

@@ -10,8 +10,8 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { LeaguesService } from '@modules/leagues/leagues.service';
-import { CreateLeagueDto } from '@modules/leagues/dtos/create-league.dto';
-import { UpdateLeagueDto } from '@modules/leagues/dtos/update-league.dto';
+import { CreateLeagueDto } from '@modules/leagues/dto/create-league.dto';
+import { UpdateLeagueDto } from '@modules/leagues/dto/update-league.dto';
 
 @ApiTags('leagues')
 @Controller('leagues')
@@ -35,7 +35,7 @@ export class LeaguesController {
   @Get(':id')
   @Version('1')
   @ApiOperation({ summary: 'Obtener una liga por ID' })
-  findOne(@Param('id') id: string) {
+  findOne(@Param('id') id: number) {
     return this.leaguesService.findOne(id);
   }
 
@@ -49,14 +49,14 @@ export class LeaguesController {
   @Patch(':id')
   @Version('1')
   @ApiOperation({ summary: 'Actualizar una liga' })
-  update(@Param('id') id: string, @Body() updateLeagueDto: UpdateLeagueDto) {
+  update(@Param('id') id: number, @Body() updateLeagueDto: UpdateLeagueDto) {
     return this.leaguesService.update(id, updateLeagueDto);
   }
 
   @Delete(':id')
   @Version('1')
   @ApiOperation({ summary: 'Eliminar una liga' })
-  remove(@Param('id') id: string) {
+  remove(@Param('id') id: number) {
     return this.leaguesService.remove(id);
   }
 }

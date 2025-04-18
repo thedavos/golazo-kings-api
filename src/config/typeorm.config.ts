@@ -18,7 +18,8 @@ console.log(`Password provided: ${process.env.DB_PASSWORD ? 'Yes' : 'No'}`);
 
 export default new DataSource({
   type: 'mysql',
-  host: process.env.DB_HOST,
+  host:
+    process.env.NODE_ENV === 'development' ? 'localhost' : process.env.DB_HOST,
   port: Number(process.env.DB_PORT) || 3306,
   username: process.env.DB_USERNAME,
   password: process.env.DB_PASSWORD,

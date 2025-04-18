@@ -6,55 +6,60 @@ import {
   OneToMany,
   CreateDateColumn,
   UpdateDateColumn,
+  Index,
 } from 'typeorm';
-import { Season } from './season.entity';
-import { LeagueStatus } from '@modules/leagues/domain/value-objects/league-status.enum';
+import { Season } from '@/modules/leagues/domain/entities/season.entity';
+import { Team } from '@/modules/teams/domain/entities/team.entity';
+import { LeagueStatus } from '@modules/leagues/domain/value-objects/league-status.enum'; // Manteniendo tu ruta de importación
 
 @Entity('leagues')
 export class League {
   @PrimaryGeneratedColumn('increment')
-  id: string;
+  id: number;
 
+  @Index()
+  @Column({ type: 'uuid', unique: true })
   @Generated('uuid')
   uuid: string;
 
-  @Column()
+  @Column({ type: 'varchar', length: 255 })
   name: string;
 
-  @Column({ unique: true })
+  @Index()
+  @Column({ type: 'varchar', length: 255, unique: true })
   slug: string;
 
-  @Column({ length: 10 })
+  @Column({ type: 'varchar', length: 10 })
   abbr: string;
 
-  @Column()
+  @Column({ type: 'varchar', length: 100 })
   country: string;
 
-  @Column()
+  @Column({ type: 'varchar', length: 100 })
   city: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', length: 512, nullable: true })
   logoUrl: string;
 
   @Column({ type: 'int', nullable: true })
   foundationYear: number;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', length: 255, nullable: true })
   website: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', length: 100, nullable: true })
   twitterHandle: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', length: 100, nullable: true })
   instagramHandle: string;
 
-  @Column({ type: 'int' })
+  @Column({ type: 'int', default: 0 })
   numberOfTeams: number;
 
-  @Column({ type: 'text' })
+  @Column({ type: 'text', nullable: true })
   description: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'text', nullable: true })
   rules: string;
 
   @Column({
@@ -72,6 +77,9 @@ export class League {
 
   @OneToMany(() => Season, (season) => season.league)
   seasons: Season[];
+
+  @OneToMany(() => Team, (team) => team.league)
+  teams: Team[];
 
   @CreateDateColumn()
   createdAt: Date;
