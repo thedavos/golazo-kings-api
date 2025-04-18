@@ -18,13 +18,23 @@ RUN pnpm install --frozen-lockfile
 # Bundle app source
 COPY . .
 
+# Copy the entrypoint script
+COPY --chown=node:node entrypoint.sh /usr/local/bin/
+
+# Make the entrypoint script executable
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
 # Creates a "dist" folder with the production build
 RUN npm run build
+
 
 # DEVELOPMENT STAGE
 FROM base AS development
 
 ENV NODE_ENV=development
+
+# Set the entrypoint
+ENTRYPOINT ["entrypoint.sh"]
 
 CMD ["npm", "run", "start:dev"]
 
@@ -32,6 +42,9 @@ CMD ["npm", "run", "start:dev"]
 FROM base AS production
 
 ENV NODE_ENV=production
+
+# Set the entrypoint
+ENTRYPOINT ["entrypoint.sh"]
 
 # Expose the port on which the app will run
 EXPOSE 3000

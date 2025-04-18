@@ -3,9 +3,9 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { League } from './domain/entities/league.entity';
 import { Season } from './domain/entities/season.entity';
-import { LeaguesService } from './application/services/leagues.service';
-import { LeagueRepository } from './infrastructure/repositories/league.repository';
-import { LeaguesController } from './presentation/controllers/leagues.controller';
+import { LeaguesService } from './leagues.service';
+import { LeagueRepository } from './league.repository';
+import { LeaguesController } from './leagues.controller';
 
 @Module({
   imports: [TypeOrmModule.forFeature([League, Season])],

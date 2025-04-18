@@ -3,9 +3,9 @@ import {
   NotFoundException,
   ConflictException,
 } from '@nestjs/common';
-import { LeagueRepository } from '@modules/leagues/infrastructure/repositories/league.repository';
-import { CreateLeagueDto } from '@modules/leagues/application/dtos/create-league.dto';
-import { UpdateLeagueDto } from '@modules/leagues/application/dtos/update-league.dto';
+import { LeagueRepository } from '@modules/leagues/league.repository';
+import { CreateLeagueDto } from '@modules/leagues/dtos/create-league.dto';
+import { UpdateLeagueDto } from '@modules/leagues/dtos/update-league.dto';
 import { League } from '@modules/leagues/domain/entities/league.entity';
 import slugify from '@common/utils/slugify.utils';
 

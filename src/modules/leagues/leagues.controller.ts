@@ -9,9 +9,9 @@ import {
   Version,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
-import { LeaguesService } from '@modules/leagues/application/services/leagues.service';
-import { CreateLeagueDto } from '@modules/leagues/application/dtos/create-league.dto';
-import { UpdateLeagueDto } from '@modules/leagues/application/dtos/update-league.dto';
+import { LeaguesService } from '@modules/leagues/leagues.service';
+import { CreateLeagueDto } from '@modules/leagues/dtos/create-league.dto';
+import { UpdateLeagueDto } from '@modules/leagues/dtos/update-league.dto';
 
 @ApiTags('leagues')
 @Controller('leagues')

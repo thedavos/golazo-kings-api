@@ -9,7 +9,7 @@ export default registerAs('database', () => ({
   database: process.env.DB_DATABASE,
   synchronize: process.env.DB_SYNCHRONIZE === 'true',
   logging: process.env.DB_LOGGING === 'true',
-  entities: ['dist/**/*.entity{.ts,.js}'],
-  migrations: ['dist/migrations/*{.ts,.js}'],
+  entities: ['src/**/*.entity{.ts,.js}'],
+  migrations: ['src/migrations/*{.ts,.js}'],
   migrationsTableName: 'migrations_typeorm',
 }));
