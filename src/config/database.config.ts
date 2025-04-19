@@ -12,4 +12,5 @@ export default registerAs('database', () => ({
   entities: ['src/**/*.entity{.ts,.js}'],
   migrations: ['src/migrations/*{.ts,.js}'],
   migrationsTableName: 'migrations_typeorm',
+  migrationsRun: true,
 }));

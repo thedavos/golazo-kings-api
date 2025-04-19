@@ -112,6 +112,24 @@ class EnvironmentVariables {
   @IsString()
   @IsOptional()
   LOG_FILE_PATH?: string;
+
+  @IsString()
+  B2_ACCESS_KEY_ID: string;
+
+  @IsString()
+  B2_SECRET_ACCESS_KEY: string;
+
+  @IsString()
+  B2_BUCKET_NAME: string;
+
+  @IsString()
+  B2_ENDPOINT: string;
+
+  @IsString()
+  B2_REGION: string;
+
+  @IsString()
+  B2_PUBLIC_URL_BASE: string;
 }
 
 export function validate(config: Record<string, unknown>) {
@@ -152,6 +170,14 @@ export function validate(config: Record<string, unknown>) {
       LOG_LEVEL: config.LOG_LEVEL,
       LOG_TO_FILE: config.LOG_TO_FILE,
       LOG_FILE_PATH: config.LOG_FILE_PATH,
+
+      // B2
+      B2_ACCESS_KEY_ID: config.B2_ACCESS_KEY_ID,
+      B2_SECRET_ACCESS_KEY: config.B2_SECRET_ACCESS_KEY,
+      B2_BUCKET_NAME: config.B2_BUCKET_NAME,
+      B2_ENDPOINT: config.B2_ENDPOINT,
+      B2_REGION: config.B2_REGION,
+      B2_PUBLIC_URL: config.B2_PUBLIC_URL,
     },
     { enableImplicitConversion: true },
   );

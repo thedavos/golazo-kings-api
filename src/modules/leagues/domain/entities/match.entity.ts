@@ -15,10 +15,9 @@ import { MatchStatus } from '@/modules/leagues/domain/value-objects/match-status
 
 @Entity('matches')
 export class Match {
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn('increment')
   id: number;
 
-  @Index()
   @Column({ type: 'uuid', unique: true })
   @Generated('uuid')
   uuid: string;

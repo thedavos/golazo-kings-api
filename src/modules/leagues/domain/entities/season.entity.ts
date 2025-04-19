@@ -17,10 +17,9 @@ import { SeasonStatus } from '@/modules/leagues/domain/value-objects/season-stat
 
 @Entity('seasons')
 export class Season {
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn('increment')
   id: number;
 
-  @Index()
   @Column({ type: 'uuid', unique: true })
   @Generated('uuid')
   uuid: string;

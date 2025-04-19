@@ -16,10 +16,9 @@ import { Team } from '@/modules/teams/domain/entities/team.entity';
 @Entity('standings')
 @Unique(['seasonId', 'teamId']) // Un equipo solo puede tener una fila por temporada
 export class Standing {
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn('increment')
   id: number;
 
-  @Index()
   @Column({ type: 'uuid', unique: true })
   @Generated('uuid')
   uuid: string;

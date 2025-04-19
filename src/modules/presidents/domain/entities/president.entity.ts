@@ -13,13 +13,15 @@ import { Team } from '@/modules/teams/domain/entities/team.entity';
 
 @Entity('presidents')
 export class President {
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn('increment')
   id: number;
 
-  @Index()
   @Column({ type: 'uuid', unique: true })
   @Generated('uuid')
   uuid: string;
+
+  @Column({ type: 'varchar', length: 255, unique: true })
+  slug: string;
 
   @Column({ type: 'varchar', length: 100 })
   firstName: string;

@@ -8,8 +8,14 @@ const envFile = `.env.${environment}`;
 // Cargar el archivo de entorno correcto
 dotenv.config({ path: path.resolve(process.cwd(), envFile) });
 
+const compiledRootDir = path.join(__dirname, '../..');
+
 // Para debug - comenta estas líneas después
-console.log(`Usando archivo de entorno: ${envFile}`);
+console.log(
+  `Usando archivo de entorno: ${envFile}`,
+  compiledRootDir,
+  path.join(__dirname, '../../**/*.entity.js'),
+);
 console.log('Database connection params:');
 console.log(`Host: ${process.env.DB_HOST}`);
 console.log(`Username: ${process.env.DB_USERNAME}`);
@@ -26,7 +32,8 @@ export default new DataSource({
   database: process.env.DB_DATABASE,
   logging: process.env.DB_LOGGING === 'true',
   synchronize: false,
-  entities: ['dist/**/*.entity{.ts,.js}'],
-  migrations: ['src/migrations/*{.ts,.js}'],
-  migrationsTableName: 'migrations_typeorm',
+  entities: [path.join(__dirname, '../../**/*.entity.js')],
+  migrations: [path.join(compiledRootDir, '/src/**/*-migration{.ts,.js}')],
+  migrationsTableName: 'migrations',
+  migrationsRun: true,
 });

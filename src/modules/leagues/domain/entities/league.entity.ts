@@ -6,7 +6,6 @@ import {
   OneToMany,
   CreateDateColumn,
   UpdateDateColumn,
-  Index,
 } from 'typeorm';
 import { Season } from '@/modules/leagues/domain/entities/season.entity';
 import { Team } from '@/modules/teams/domain/entities/team.entity';
@@ -17,7 +16,6 @@ export class League {
   @PrimaryGeneratedColumn('increment')
   id: number;
 
-  @Index()
   @Column({ type: 'uuid', unique: true })
   @Generated('uuid')
   uuid: string;
@@ -25,7 +23,6 @@ export class League {
   @Column({ type: 'varchar', length: 255 })
   name: string;
 
-  @Index()
   @Column({ type: 'varchar', length: 255, unique: true })
   slug: string;
 
