@@ -59,9 +59,6 @@ USER node
 # Expose the application port
 EXPOSE 3000
 
-# Set the entrypoint
-ENTRYPOINT ["entrypoint.sh"]
-
 # Default command to run the production application
 CMD ["node", "dist/main.js"]
 
