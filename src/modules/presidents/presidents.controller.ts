@@ -10,23 +10,34 @@ import {
   ParseUUIDPipe,
   HttpCode,
   HttpStatus,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
-import { PresidentsService } from './presidents.service';
-import { CreatePresidentDto } from './dto/create-president.dto';
-import { UpdatePresidentDto } from './dto/update-president.dto';
 import {
   ApiTags,
   ApiOperation,
   ApiResponse,
   ApiParam,
   ApiBody,
+  ApiConsumes,
 } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { PresidentsService } from './presidents.service';
+import { CreatePresidentDto } from './dto/create-president.dto';
+import { UpdatePresidentDto } from './dto/update-president.dto';
+import { IMAGE_VALIDATION_PIPE } from '@common/constants/file-validation.constants';
 import { President } from './domain/entities/president.entity';
+import { Image } from '@/modules/image/domain/entities/image.entity';
+import { ImageService } from '@modules/image/image.service';
+import { ImageEntities } from '@modules/image/domain/value-objects/image-entities.enum';
 
 @ApiTags('Presidents')
 @Controller('presidents')
 export class PresidentsController {
-  constructor(private readonly presidentsService: PresidentsService) {}
+  constructor(
+    private readonly presidentsService: PresidentsService,
+    private readonly imageService: ImageService,
+  ) {}
 
   @Post()
   @ApiOperation({ summary: 'Crear un nuevo presidente' })
@@ -107,7 +118,7 @@ export class PresidentsController {
   }
 
   @Delete(':id')
-  @HttpCode(HttpStatus.NO_CONTENT) // Retorna 204 No Content en éxito
+  @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Eliminar un presidente por su ID' })
   @ApiParam({
     name: 'id',
@@ -177,5 +188,80 @@ export class PresidentsController {
     @Param('leagueUuid', ParseUUIDPipe) leagueUuid: string,
   ): Promise<President[]> {
     return this.presidentsService.findActivePresidentsByLeague(leagueUuid);
+  }
+
+  @Post(':presidentId/images')
+  @UseInterceptors(FileInterceptor('file'))
+  @ApiConsumes('multipart/form-data')
+  @ApiOperation({ summary: 'Upload an image for a specific president' })
+  @ApiParam({
+    name: 'presidentId',
+    type: Number,
+    description: 'ID of the president to associate the image with',
+  })
+  @ApiBody({
+    description: 'Image file to upload (png, jpg, jpeg, webp, gif)',
+    required: true,
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+          description: 'The image file itself',
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Image uploaded and associated successfully.',
+    type: Image,
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Bad Request (Invalid file type, size, or missing file)',
+  })
+  @ApiResponse({ status: 404, description: 'President not found' })
+  @ApiResponse({
+    status: 500,
+    description: 'Internal server error during upload process',
+  })
+  async addPresidentImage(
+    @Param('presidentId', ParseIntPipe) presidentId: number,
+    @UploadedFile(IMAGE_VALIDATION_PIPE)
+    file: Express.Multer.File,
+  ) {
+    await this.presidentsService.findOne(presidentId);
+
+    await this.imageService.uploadImage(
+      file,
+      ImageEntities.PRESIDENT,
+      presidentId,
+    );
+  }
+
+  @Get(':presidentId/images')
+  @ApiOperation({ summary: 'Get all images associated with a specific player' })
+  @ApiParam({
+    name: 'presidentId',
+    type: Number,
+    description: 'ID of the player whose images to retrieve',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'List of images for the president.',
+    type: [Image],
+  })
+  @ApiResponse({ status: 404, description: 'President not found' })
+  async getPresidentImages(
+    @Param('presidentId', ParseIntPipe) presidentId: number,
+  ) {
+    await this.presidentsService.findOne(presidentId);
+
+    return this.imageService.findImagesForEntity(
+      ImageEntities.PRESIDENT,
+      presidentId,
+    );
   }
 }

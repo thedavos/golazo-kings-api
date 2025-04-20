@@ -1,5 +1,4 @@
 import { registerAs } from '@nestjs/config';
-import * as process from 'node:process';
 
 export default registerAs('b2', () => ({
   b2KeyId: process.env.B2_ACCESS_KEY_ID,

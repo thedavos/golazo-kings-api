@@ -17,7 +17,7 @@ import {
 } from '@aws-sdk/client-s3';
 import { Image } from '@modules/image/domain/entities/image.entity';
 import { S3_CLIENT } from '@modules/image/provider/s3-client.provider';
-import { allowedEntityTypes } from '@modules/image/domain/image.constant';
+import { allowedEntityTypes } from '@modules/image/domain/image.constants';
 import { ImageEntities } from '@/modules/image/domain/value-objects/image-entities.enum';
 
 @Injectable()
