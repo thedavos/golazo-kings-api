@@ -177,7 +177,7 @@ export function validate(config: Record<string, unknown>) {
       B2_BUCKET_NAME: config.B2_BUCKET_NAME,
       B2_ENDPOINT: config.B2_ENDPOINT,
       B2_REGION: config.B2_REGION,
-      B2_PUBLIC_URL: config.B2_PUBLIC_URL,
+      B2_PUBLIC_URL_BASE: config.B2_PUBLIC_URL_BASE,
     },
     { enableImplicitConversion: true },
   );
