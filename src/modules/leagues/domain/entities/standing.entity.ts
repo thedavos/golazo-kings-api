@@ -9,6 +9,7 @@ import {
   Index,
   Unique,
   Generated,
+  PrimaryColumn,
 } from 'typeorm';
 import { Season } from '@/modules/leagues/domain/entities/season.entity';
 import { Team } from '@/modules/teams/domain/entities/team.entity';
@@ -16,10 +17,10 @@ import { Team } from '@/modules/teams/domain/entities/team.entity';
 @Entity('standings')
 @Unique(['seasonId', 'teamId']) // Un equipo solo puede tener una fila por temporada
 export class Standing {
-  @PrimaryGeneratedColumn('increment')
+  @PrimaryGeneratedColumn('increment', { type: 'int' })
   id: number;
 
-  @Column({ type: 'uuid', unique: true })
+  @PrimaryColumn({ unique: true })
   @Generated('uuid')
   uuid: string;
 
@@ -59,7 +60,7 @@ export class Standing {
 
   // --- Relaciones ---
   @Index()
-  @Column()
+  @Column({ type: 'int' })
   seasonId: number; // FK a Season
 
   @Index()

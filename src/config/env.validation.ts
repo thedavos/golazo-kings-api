@@ -44,10 +44,8 @@ class EnvironmentVariables {
   @IsString()
   DB_HOST: string;
 
-  @IsInt()
-  @Min(1)
-  @Max(65535)
-  DB_PORT: number;
+  @IsString()
+  DB_PORT: string;
 
   @IsString()
   DB_DATABASE: string;
@@ -178,6 +176,10 @@ export function validate(config: Record<string, unknown>) {
       B2_ENDPOINT: config.B2_ENDPOINT,
       B2_REGION: config.B2_REGION,
       B2_PUBLIC_URL_BASE: config.B2_PUBLIC_URL_BASE,
+
+      // Admin
+      KINGS_LEAGUE_BASE_URL: config.KINGS_LEAGUE_BASE_URL,
+      QUEENS_LEAGUE_BASE_URL: config.QUEENS_LEAGUE_BASE_URL,
     },
     { enableImplicitConversion: true },
   );

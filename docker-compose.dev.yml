@@ -5,23 +5,23 @@ services:
     env_file:
       - .env.development
 
-  api:
-    build:
-      context: .
-      target: development
-    container_name: golazo_kings_api_dev
-    env_file:
-      - .env.development
-    volumes:
-      - .:/app
-      - /app/node_modules
-    ports:
-      - "${PORT:-3000}:${PORT:-3000}"
-    environment:
-      - NODE_ENV=development
-    depends_on:
-      mysql:
-        condition: service_healthy
-    networks:
-      - golazo_network
-    command: npm run start:dev
+#  api:
+#    build:
+#      context: .
+#      target: development
+#    container_name: golazo_kings_api_dev
+#    env_file:
+#      - .env.development
+#    volumes:
+#      - .:/app
+#      - /app/node_modules
+#    ports:
+#      - "${PORT:-3000}:${PORT:-3000}"
+#    environment:
+#      - NODE_ENV=development
+#    depends_on:
+#      mysql:
+#        condition: service_healthy
+#    networks:
+#      - golazo_network
+#    command: npm run start:dev

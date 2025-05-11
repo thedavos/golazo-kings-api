@@ -7,11 +7,13 @@ import {
   Param,
   Delete,
   Version,
+  ParseIntPipe,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiParam } from '@nestjs/swagger';
 import { LeaguesService } from '@modules/leagues/leagues.service';
 import { CreateLeagueDto } from '@modules/leagues/dto/create-league.dto';
 import { UpdateLeagueDto } from '@modules/leagues/dto/update-league.dto';
+import { NotEmptyPipe } from '@common/pipes/not-empty.pipe';
 
 @ApiTags('leagues')
 @Controller('leagues')
@@ -35,7 +37,15 @@ export class LeaguesController {
   @Get(':id')
   @Version('1')
   @ApiOperation({ summary: 'Obtener una liga por ID' })
-  findOne(@Param('id') id: number) {
+  @ApiParam({
+    name: 'id',
+    required: true,
+    description: 'ID de la liga (debe ser un número positivo)',
+  })
+  findOne(
+    @Param('id', new NotEmptyPipe({ paramName: 'id' }), ParseIntPipe)
+    id: number,
+  ) {
     return this.leaguesService.findOne(id);
   }
 

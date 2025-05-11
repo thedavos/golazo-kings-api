@@ -6,6 +6,7 @@ import {
   UpdateDateColumn,
   Index,
   Generated,
+  PrimaryColumn,
 } from 'typeorm';
 import { IsEnum } from 'class-validator';
 import { ImageEntities } from '@modules/image/domain/value-objects/image-entities.enum';
@@ -15,7 +16,7 @@ export class Image {
   @PrimaryGeneratedColumn('increment')
   id: number;
 
-  @Column({ type: 'uuid', unique: true })
+  @PrimaryColumn({ unique: true })
   @Generated('uuid')
   uuid: string;
 

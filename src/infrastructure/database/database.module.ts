@@ -1,6 +1,13 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { President } from '@/modules/presidents/domain/entities/president.entity';
+import { Standing } from '@/modules/leagues/domain/entities/standing.entity';
+import { League } from '@/modules/leagues/domain/entities/league.entity';
+import { Match } from '@/modules/leagues/domain/entities/match.entity';
+import { Season } from '@/modules/leagues/domain/entities/season.entity';
+import { Image } from '@/modules/image/domain/entities/image.entity';
+import { Player } from '@/modules/players/domain/entities/player.entity';
 
 @Module({
   imports: [
@@ -15,11 +22,13 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
         password: configService.get('database.password') as string,
         root: configService.get('database.rootPassword') as string,
         database: configService.get('database.database') as string,
-        entities: configService.get('database.entities'),
         synchronize: configService.get('database.synchronize'),
         logging: configService.get('database.logging'),
         migrations: configService.get('database.migrations'),
         migrationsTableName: configService.get('database.migrationsTableName'),
+        migrationsRun: configService.get('database.migrationsRun'),
+        entities: [President, Standing, League, Match, Season, Image, Player],
+        autoLoadEntities: true,
       }),
     }),
   ],

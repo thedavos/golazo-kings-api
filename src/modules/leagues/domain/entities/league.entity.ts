@@ -2,6 +2,7 @@ import {
   Entity,
   Column,
   PrimaryGeneratedColumn,
+  PrimaryColumn,
   Generated,
   OneToMany,
   CreateDateColumn,
@@ -9,14 +10,14 @@ import {
 } from 'typeorm';
 import { Season } from '@/modules/leagues/domain/entities/season.entity';
 import { Team } from '@/modules/teams/domain/entities/team.entity';
-import { LeagueStatus } from '@modules/leagues/domain/value-objects/league-status.enum'; // Manteniendo tu ruta de importación
+import { LeagueStatus } from '@modules/leagues/domain/value-objects/league-status.enum';
 
 @Entity('leagues')
 export class League {
   @PrimaryGeneratedColumn('increment')
   id: number;
 
-  @Column({ type: 'uuid', unique: true })
+  @PrimaryColumn({ unique: true })
   @Generated('uuid')
   uuid: string;
 

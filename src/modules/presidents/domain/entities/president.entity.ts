@@ -8,6 +8,7 @@ import {
   JoinColumn,
   Index,
   Generated,
+  PrimaryColumn,
 } from 'typeorm';
 import { Team } from '@/modules/teams/domain/entities/team.entity';
 
@@ -16,7 +17,7 @@ export class President {
   @PrimaryGeneratedColumn('increment')
   id: number;
 
-  @Column({ type: 'uuid', unique: true })
+  @PrimaryColumn({ unique: true })
   @Generated('uuid')
   uuid: string;
 

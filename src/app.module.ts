@@ -11,14 +11,17 @@ import {
   adminConfig,
 } from '@/config';
 import { validate } from '@config/env.validation';
+import { ApiResponseModule } from '@common/response';
 import { PresidentsModule } from '@modules/presidents/presidents.module';
 import { LeaguesModule } from '@modules/leagues/leagues.module';
 import { TeamsModule } from '@/modules/teams/teams.module';
 import { PlayersModule } from '@/modules/players/players.module';
 import { ImageModule } from '@/modules/image/image.module';
+import { AdminModule } from '@/modules/admin/admin.module';
 
 @Module({
   imports: [
+    ApiResponseModule,
     ConfigModule.forRoot({
       isGlobal: true,
       load: [appConfig, databaseConfig, swaggerConfig, b2Config, adminConfig],
@@ -34,6 +37,7 @@ import { ImageModule } from '@/modules/image/image.module';
     LeaguesModule,
     TeamsModule,
     PlayersModule,
+    AdminModule,
   ],
   controllers: [AppController],
   providers: [AppService],

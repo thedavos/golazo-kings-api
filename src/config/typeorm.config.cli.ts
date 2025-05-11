@@ -10,12 +10,6 @@ dotenv.config({ path: path.resolve(process.cwd(), envFile) });
 
 const compiledRootDir = path.join(__dirname, '../..');
 
-// Para debug - comenta estas líneas después
-console.log(
-  `Usando archivo de entorno: ${envFile}`,
-  compiledRootDir,
-  path.join(__dirname, '../../**/*.entity.js'),
-);
 console.log('Database connection params:');
 console.log(`Host: ${process.env.DB_HOST}`);
 console.log(`Username: ${process.env.DB_USERNAME}`);
@@ -31,9 +25,9 @@ export default new DataSource({
   password: process.env.DB_PASSWORD,
   database: process.env.DB_DATABASE,
   logging: process.env.DB_LOGGING === 'true',
-  synchronize: false,
   entities: [path.join(__dirname, '../../**/*.entity.js')],
-  migrations: [path.join(compiledRootDir, '/src/**/*-migration{.ts,.js}')],
+  migrations: [path.join(compiledRootDir, '/src/**/*-migrate{.ts,.js}')],
   migrationsTableName: 'migrations',
-  migrationsRun: true,
+  synchronize: false,
+  migrationsRun: false,
 });

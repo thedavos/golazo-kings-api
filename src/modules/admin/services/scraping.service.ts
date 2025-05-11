@@ -1,8 +1,11 @@
+import * as cheerio from 'cheerio';
+import { Element } from 'domhandler';
+import { firstValueFrom } from 'rxjs';
 import { Injectable, Logger } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
-import { firstValueFrom } from 'rxjs';
-import { fail, success } from '@/common/result.common';
+import { fail, success, Result } from '@/common/result.common';
+import { some, none, Option } from '@common/maybe';
 import { TeamsService } from '@/modules/teams/teams.service';
 import {
   SUPPORTED_LEAGUES,
@@ -13,6 +16,7 @@ import {
 export class ScrapingService {
   private readonly logger = new Logger(ScrapingService.name);
   private readonly kingsLeagueBaseUrl: string;
+  private readonly queensLeagueBaseUrl: string;
 
   constructor(
     private readonly httpService: HttpService,
@@ -22,42 +26,196 @@ export class ScrapingService {
     this.kingsLeagueBaseUrl = this.configService.getOrThrow<string>(
       'admin.kingsLeagueBaseUrl',
     );
+
+    this.queensLeagueBaseUrl = this.configService.getOrThrow<string>(
+      'admin.queensLeagueBaseUrl',
+    );
   }
 
-  async scrape(leagueKey: SupportedLeagueKey) {
-    const leaguePath = SUPPORTED_LEAGUES[leagueKey];
+  private getKingsBaseUrl(league: SupportedLeagueKey): string {
+    return league.includes('QUEENS')
+      ? this.queensLeagueBaseUrl
+      : this.kingsLeagueBaseUrl;
+  }
 
-    if (!leaguePath) {
-      this.logger.warn(
-        `Unsupported league requested for scraping: ${leagueKey}`,
-      );
-      return fail(new Error(leagueKey));
-    }
-
-    const url = `${this.kingsLeagueBaseUrl}/${leaguePath}/equipos`;
-    this.logger.log(
-      `Starting scraping for league: ${leagueKey} from URL: ${url}`,
-    );
-
-    let html: string;
+  /**
+   * Método privado para obtener el contenido HTML de una URL.
+   * Encapsula la lógica de la petición HTTP y manejo básico de errores.
+   * @param url La URL completa a la que hacer la petición.
+   * @returns Promesa que resuelve a Result<string, Error> (HTML en éxito, Error en fallo).
+   */
+  private async fetchHtml(url: string): Promise<Result<string, Error>> {
+    this.logger.log(`Workspaceing URL: ${url}`);
     try {
       const response = await firstValueFrom(
         this.httpService.get(url /*, options */),
       );
+
+      // Verificar código de estado HTTP
       if (response.status < 200 || response.status >= 300) {
-        this.logger.error(`HTTP Error ${response.status} fetching ${url}`);
-        return fail(new Error(`Received HTTP status ${response.status}`));
+        const error = new Error(
+          `HTTP Error ${response.status} fetching ${url}`,
+        );
+        this.logger.error(error.message);
+        return fail(error); // Retorna fallo con el error HTTP
       }
 
-      html = response.data as string;
+      const html = response.data as string; // Asumimos que response.data es string
       this.logger.verbose(
-        `Successfully fetched HTML (${html.length} bytes) for ${leagueKey}`,
+        `Successfully fetched HTML (${html.length} bytes) from ${url}`,
       );
-      return success(html);
+      return success(html); // Retorna éxito con el HTML
     } catch (e) {
-      const error = e as Error;
-      this.logger.error(`Failed to fetch HTML from ${url}`, error?.stack);
-      return fail<boolean, Error>(error);
+      // Manejar errores de red, timeout, etc.
+      const error =
+        e instanceof Error
+          ? e
+          : new Error(`Unknown error fetching ${url}: ${e}`);
+      this.logger.error(`Failed to fetch HTML from ${url}`, error.stack);
+      return fail(error); // Retorna fallo con el error de la petición
     }
+  }
+
+  async scrape(leagueSlug: SupportedLeagueKey) {
+    const leaguePath = SUPPORTED_LEAGUES[leagueSlug];
+
+    if (!leaguePath) {
+      this.logger.warn(
+        `Unsupported league requested for scraping: ${leagueSlug}`,
+      );
+      return fail(new Error(leagueSlug));
+    }
+
+    const url = `${this.getKingsBaseUrl(leagueSlug)}/${leaguePath}/equipos`;
+    const fetchResult = await this.fetchHtml(url);
+
+    if (fetchResult.isFail) {
+      this.logger.error(
+        `Failed to fetch HTML for ${leagueSlug}. Aborting processing.`,
+      );
+
+      return fetchResult;
+    }
+
+    const html = fetchResult.value;
+
+    const teamDataResult = this.extractTeamData(html);
+
+    this.logger.log(
+      `Scraping process completed for league: ${leagueSlug}. Result: ${teamDataResult.isSuccess ? 'Success' : 'Failure'}`,
+    );
+
+    this.logger.log(teamDataResult.value);
+
+    return teamDataResult;
+  }
+
+  private extractTeamData(html: string) {
+    this.logger.log('Processing HTML to extract team data.');
+    const teams = [] as any[];
+
+    try {
+      const $ = cheerio.load(html);
+      const teamElements = $('section.kql-w-container .team-card-container');
+
+      if (teamElements.length === 0) {
+        this.logger.warn(
+          'No team elements found with the selector ".team-card".',
+        );
+
+        return success([]);
+      }
+
+      teamElements.each((index, element) => {
+        try {
+          // Dentro de cada elemento de equipo, encontrar nombre, logo, etc.
+          const $element = $(element);
+
+          const teamNameOptional = this.extractContent($element, '.team-name');
+          const teamLogoOptional = this.extractAttribute(
+            $element,
+            '.container-logo-img img',
+            'src',
+          );
+
+          // Validar que los datos mínimos requeridos se encontraron
+          if (teamNameOptional.isNone() || teamLogoOptional.isNone()) {
+            this.logger.warn(
+              `Missing required data for team element at index ${index}. Skipping.`,
+            );
+            // Podrías lanzar un error aquí si es estricto, o simplemente loguear y continuar.
+            // Decidimos loguear y continuar por robustez si algunos equipos fallan.
+            return; // Continue to next iteration in .each()
+          }
+
+          teams.push({
+            teamName: teamNameOptional.toNullable(),
+            teamLogo: teamLogoOptional
+              .map<string>((value) => `https://kingsleague.pro${value}`)
+              .toNullable(),
+          });
+        } catch (innerError) {
+          // Manejar errores durante la extracción de un solo equipo
+          const err =
+            innerError instanceof Error
+              ? innerError
+              : new Error(
+                  `Unknown error processing team element at index ${index}: ${innerError}`,
+                );
+          this.logger.error(
+            `Error processing team element at index ${index}`,
+            err.stack,
+          );
+          // Podrías decidir fallar todo el proceso si un solo error es crítico,
+          // o simplemente loguear y omitir este equipo (como en este ejemplo).
+        }
+      });
+
+      this.logger.verbose(`Successfully extracted ${teams.length} teams.`);
+
+      return success(teams);
+    } catch (e) {
+      const error =
+        e instanceof Error ? e : new Error(`Failed to process HTML: ${e}`);
+      this.logger.error(`Error during HTML processing`, error.stack);
+
+      return fail(error);
+    }
+  }
+
+  private extractContent(
+    element: cheerio.Cheerio<Element>,
+    selector: string,
+  ): Option<string> {
+    const selectedElement = element.find(selector);
+
+    if (selectedElement.length > 0) {
+      const text = selectedElement.first().text().trim();
+      if (text.length > 0) {
+        return some(text);
+      }
+    }
+
+    return none<string>();
+  }
+
+  private extractAttribute(
+    element: cheerio.Cheerio<Element>,
+    selector: string,
+    attributeName: string,
+  ): Option<string> {
+    const selectedElement = element.find(selector);
+
+    if (selectedElement.length === 0) {
+      return none<string>();
+    }
+
+    const attributeValue = selectedElement.first().attr(attributeName);
+
+    if (attributeValue && attributeValue.trim().length > 0) {
+      return some(attributeValue.trim());
+    }
+
+    return none<string>();
   }
 }

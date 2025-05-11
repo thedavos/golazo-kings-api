@@ -1,11 +1,9 @@
-import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
+import { Injectable, CanActivate } from '@nestjs/common';
 import { Observable } from 'rxjs';
 
 @Injectable()
 export class AdminGuard implements CanActivate {
-  canActivate(
-    context: ExecutionContext,
-  ): boolean | Promise<boolean> | Observable<boolean> {
+  canActivate(): boolean | Promise<boolean> | Observable<boolean> {
     // const request = context.switchToHttp().getRequest();
     // Asume que tienes la info del usuario en request (ej. desde un JwtAuthGuard global)
     // const user = request.user;
@@ -19,7 +17,7 @@ export class AdminGuard implements CanActivate {
     // throw new ForbiddenException('Access denied. Admin privileges required.');
     // return false;
     // }
-    console.log('AdminGuard: ', context.switchToHttp().getRequest());
+    // console.log('AdminGuard: ', context.switchToHttp().getRequest());
     return true;
   }
 }

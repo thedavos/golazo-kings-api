@@ -46,10 +46,6 @@ ENV NODE_ENV=production
 COPY --from=builder /usr/src/app/package.json /usr/src/app/pnpm-lock.yaml ./
 COPY --from=builder /usr/src/app/dist ./dist
 
-# Copy entrypoint script and set ownership/permissions
-COPY --chown=node:node scripts/entrypoint.sh /usr/local/bin/
-RUN chmod +x /usr/local/bin/entrypoint.sh
-
 # Install ONLY production dependencies
 RUN pnpm install --prod --frozen-lockfile
 
@@ -70,17 +66,6 @@ FROM base AS development
 WORKDIR /usr/src/app
 
 ENV NODE_ENV=development
-
-# Copy entrypoint script and set ownership/permissions
-# (Needs to be copied again as this stage starts from 'base')
-COPY --chown=node:node scripts/entrypoint.sh /usr/local/bin/
-RUN chmod +x /usr/local/bin/entrypoint.sh
-
-# Set non-root user (optional for dev, but good practice)
-# USER node # Uncomment if needed/desired for dev
-
-# Set the entrypoint
-ENTRYPOINT ["entrypoint.sh"]
 
 # Default command for development (e.g., with hot-reloading)
 CMD ["npm", "run", "start:dev"]

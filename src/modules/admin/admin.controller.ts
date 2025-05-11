@@ -14,6 +14,7 @@ import {
   SupportedLeagueKey,
   SUPPORTED_LEAGUES,
 } from './domain/value-objects/supported-leagues.enum';
+import { LeagueKeyPipe } from './pipes/league-key.pipe';
 
 @ApiTags('admin')
 @Controller('admin')
@@ -23,15 +24,16 @@ export class AdminController {
 
   constructor(private readonly scrapingService: ScrapingService) {}
 
-  @Post('scraping/kings-league/:league/sync-teams')
+  @Post('scraping/:league/teams')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
-    summary: 'Scrape and save Kings League teams for a specific league',
+    summary: 'Scrape Kings League teams for a specific league',
   })
   @ApiParam({
     name: 'league',
     required: true,
-    description: 'League identifier (e.g., spain, americas)',
+    description:
+      'League slug (e.g., kings-league-spain, kings-league-americas)',
     enum: SUPPORTED_LEAGUES,
   })
   @ApiResponse({
@@ -51,7 +53,9 @@ export class AdminController {
     status: 500,
     description: 'Internal server error during scraping or saving process.',
   })
-  async scrapeKingsLeagueTeams(@Param('league') league: SupportedLeagueKey) {
+  async scrapeKingsLeagueTeams(
+    @Param('league', LeagueKeyPipe) league: SupportedLeagueKey,
+  ) {
     this.logger.log(
       `Admin request received to scrape and save league: ${league}`,
     );
@@ -61,14 +65,14 @@ export class AdminController {
     if (result.isSuccess) {
       const summary = result.value;
       this.logger.log(
-        `Scrape-and-save successful for league ${summary as string}: ${JSON.stringify(summary)}`,
+        `Scrape successful for league ${summary as string}: ${JSON.stringify(summary)}`,
       );
 
       return summary;
     } else {
       const error = result.error;
       this.logger.error(
-        `Scrape-and-save failed for league ${league}: ${error?.message}`,
+        `Scrape failed for league ${league}: ${error?.message}`,
         error?.stack,
       );
     }
