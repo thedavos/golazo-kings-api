@@ -1,16 +1,18 @@
 import * as cheerio from 'cheerio';
 import { Element } from 'domhandler';
 import { firstValueFrom } from 'rxjs';
-import { Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import { fail, success, Result } from '@/common/result.common';
 import { some, none, Option } from '@common/maybe';
 import { TeamsService } from '@/modules/teams/teams.service';
 import {
-  SUPPORTED_LEAGUES,
   SupportedLeagueKey,
+  getSupportedLeague,
 } from '@/modules/admin/domain/value-objects/supported-leagues.enum';
+import { ScrapedTeamDto } from '@/modules/admin/domain/dtos/scraped-team.dto';
+import { ScrapedLeagueDto } from '@modules/admin/domain/dtos/scraped-league.dto';
 
 @Injectable()
 export class ScrapingService {
@@ -36,6 +38,21 @@ export class ScrapingService {
     return league.includes('QUEENS')
       ? this.queensLeagueBaseUrl
       : this.kingsLeagueBaseUrl;
+  }
+
+  private getKingsTeamsUrl(leagueSlug: SupportedLeagueKey) {
+    try {
+      const kingsTeamsUrl = getSupportedLeague(leagueSlug)
+        .map(
+          (league) => `${this.getKingsBaseUrl(leagueSlug)}/${league}/equipos`,
+        )
+        .getOrThrow(() => new BadRequestException(leagueSlug));
+
+      return success(kingsTeamsUrl);
+    } catch (e) {
+      const error = e as Error;
+      return fail<string, Error>(error);
+    }
   }
 
   /**
@@ -76,18 +93,12 @@ export class ScrapingService {
     }
   }
 
-  async scrape(leagueSlug: SupportedLeagueKey) {
-    const leaguePath = SUPPORTED_LEAGUES[leagueSlug];
-
-    if (!leaguePath) {
-      this.logger.warn(
-        `Unsupported league requested for scraping: ${leagueSlug}`,
-      );
-      return fail(new Error(leagueSlug));
-    }
-
-    const url = `${this.getKingsBaseUrl(leagueSlug)}/${leaguePath}/equipos`;
-    const fetchResult = await this.fetchHtml(url);
+  async scrapeTeams(
+    leagueSlug: SupportedLeagueKey,
+    leagueDto: ScrapedLeagueDto,
+  ) {
+    const kingsTeamsUrl = this.getKingsTeamsUrl(leagueSlug);
+    const fetchResult = await this.fetchHtml(kingsTeamsUrl.value);
 
     if (fetchResult.isFail) {
       this.logger.error(
@@ -99,7 +110,7 @@ export class ScrapingService {
 
     const html = fetchResult.value;
 
-    const teamDataResult = this.extractTeamData(html);
+    const teamDataResult = this.extractTeamData(html, leagueDto);
 
     this.logger.log(
       `Scraping process completed for league: ${leagueSlug}. Result: ${teamDataResult.isSuccess ? 'Success' : 'Failure'}`,
@@ -110,9 +121,9 @@ export class ScrapingService {
     return teamDataResult;
   }
 
-  private extractTeamData(html: string) {
+  private extractTeamData(html: string, leagueDto: ScrapedLeagueDto) {
     this.logger.log('Processing HTML to extract team data.');
-    const teams = [] as any[];
+    const teams = [] as ScrapedTeamDto[];
 
     try {
       const $ = cheerio.load(html);
@@ -128,32 +139,32 @@ export class ScrapingService {
 
       teamElements.each((index, element) => {
         try {
-          // Dentro de cada elemento de equipo, encontrar nombre, logo, etc.
           const $element = $(element);
 
-          const teamNameOptional = this.extractContent($element, '.team-name');
-          const teamLogoOptional = this.extractAttribute(
+          const teamName = this.extractContent(
             $element,
-            '.container-logo-img img',
-            'src',
-          );
-
-          // Validar que los datos mínimos requeridos se encontraron
-          if (teamNameOptional.isNone() || teamLogoOptional.isNone()) {
+            '.team-name',
+          ).getOrThrow(() => {
             this.logger.warn(
               `Missing required data for team element at index ${index}. Skipping.`,
             );
-            // Podrías lanzar un error aquí si es estricto, o simplemente loguear y continuar.
-            // Decidimos loguear y continuar por robustez si algunos equipos fallan.
-            return; // Continue to next iteration in .each()
-          }
 
-          teams.push({
-            teamName: teamNameOptional.toNullable(),
-            teamLogo: teamLogoOptional
-              .map<string>((value) => `https://kingsleague.pro${value}`)
-              .toNullable(),
+            return new Error(
+              `Unable to extract team element at index ${index}.`,
+            );
           });
+
+          const teamLogo = this.extractAttribute(
+            $element,
+            '.container-logo-img img',
+            'src',
+          )
+            .map<string>((value) => `https://kingsleague.pro${value}`)
+            .toNullable();
+
+          teams.push(
+            new ScrapedTeamDto(teamName, leagueDto.leagueId, teamLogo),
+          );
         } catch (innerError) {
           // Manejar errores durante la extracción de un solo equipo
           const err =

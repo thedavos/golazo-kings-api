@@ -2,7 +2,7 @@ import { PipeTransform, Injectable, BadRequestException } from '@nestjs/common';
 import {
   SupportedLeagueKey,
   validateLeagueKey,
-  supportedKeysList,
+  SupportedLeagueSlugList,
 } from '@modules/admin/domain/value-objects/supported-leagues.enum';
 
 @Injectable()
@@ -20,9 +20,12 @@ export class LeagueKeyPipe
 
     return leagueKeyOptional.getOrThrow(
       () =>
-        new BadRequestException(
-          `Unsupported or invalid league identifier: "${value}". Expected a valid slug corresponding to one of: ${supportedKeysList}`,
-        ),
+        new BadRequestException({
+          message: `Invalid league slug provided: '${value}'`,
+          errors: {
+            validLeagues: SupportedLeagueSlugList,
+          },
+        }),
     );
   }
 }

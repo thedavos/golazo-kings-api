@@ -24,12 +24,12 @@ export class CreateTeamDto {
   logoUrl?: string;
 
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   @MaxLength(255)
   city: string;
 
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   @MaxLength(255)
   country: string;
 

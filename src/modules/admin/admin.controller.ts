@@ -5,6 +5,7 @@ import {
   Logger,
   Post,
   Param,
+  Body,
   UseGuards,
 } from '@nestjs/common';
 import { ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
@@ -15,6 +16,7 @@ import {
   SUPPORTED_LEAGUES,
 } from './domain/value-objects/supported-leagues.enum';
 import { LeagueKeyPipe } from './pipes/league-key.pipe';
+import { ScrapedLeagueDto } from './domain/dtos/scraped-league.dto';
 
 @ApiTags('admin')
 @Controller('admin')
@@ -55,12 +57,13 @@ export class AdminController {
   })
   async scrapeKingsLeagueTeams(
     @Param('league', LeagueKeyPipe) league: SupportedLeagueKey,
+    @Body() leagueDto: ScrapedLeagueDto,
   ) {
     this.logger.log(
       `Admin request received to scrape and save league: ${league}`,
     );
 
-    const result = await this.scrapingService.scrape(league);
+    const result = await this.scrapingService.scrapeTeams(league, leagueDto);
 
     if (result.isSuccess) {
       const summary = result.value;

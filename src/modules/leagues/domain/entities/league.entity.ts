@@ -84,4 +84,8 @@ export class League {
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  get isQueens() {
+    return this.name.toLowerCase().includes('queens');
+  }
 }

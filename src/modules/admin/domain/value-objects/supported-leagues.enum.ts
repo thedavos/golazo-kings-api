@@ -1,4 +1,4 @@
-import { Option, some, none } from '@common/maybe';
+import { Option, some, none, fromValue } from '@common/maybe';
 
 export const SUPPORTED_LEAGUES = {
   ['KINGS-LEAGUE-SPAIN']: 'espana',
@@ -25,10 +25,21 @@ export type SupportedLeagueInputSlug =
   | 'queens-league-spain'
   | 'queens-league-americas';
 
+export const SupportedLeagueSlugList = Object.keys(SUPPORTED_LEAGUES).map(
+  (league) => league.toLowerCase(),
+);
+
 export function validateLeagueKey(key: string): Option<SupportedLeagueKey> {
   if (key in SUPPORTED_LEAGUES) {
     return some<SupportedLeagueKey>(key as SupportedLeagueKey);
   }
 
   return none<SupportedLeagueKey>();
+}
+
+export function getSupportedLeague(key: SupportedLeagueKey): Option<string> {
+  return validateLeagueKey(key).flatMap((key) => {
+    const leagueFound = SUPPORTED_LEAGUES[key];
+    return fromValue(leagueFound);
+  });
 }
