@@ -4,7 +4,7 @@ export const SUPPORTED_LEAGUES = {
   ['KINGS-LEAGUE-SPAIN']: 'espana',
   ['KINGS-LEAGUE-AMERICAS']: 'americas',
   ['KINGS-LEAGUE-ITALIA']: 'italia',
-  ['KINGS-LEAGUE-BRAZIL']: 'brazil',
+  ['KINGS-LEAGUE-BRASIL']: 'brazil',
   ['KINGS-LEAGUE-FRANCE']: 'france',
   ['KINGS-LEAGUE-GERMANY']: 'germany',
   ['QUEENS-LEAGUE-AMERICAS']: 'americas',
@@ -19,7 +19,7 @@ export type SupportedLeagueInputSlug =
   | 'kings-league-spain'
   | 'kings-league-americas'
   | 'kings-league-italia'
-  | 'kings-league-brazil'
+  | 'kings-league-brasil'
   | 'kings-league-france'
   | 'kings-league-germany'
   | 'queens-league-spain'
