@@ -168,21 +168,8 @@ export class S3StorageService {
    */
   async downloadFile(key: string): Promise<Buffer> {
     try {
-      const response = await this.s3Client.send(
-        new GetObjectCommand({
-          Bucket: this.bucketName,
-          Key: key,
-        }),
-      );
-
-      if (!response.Body) {
-        throw new InternalServerErrorException(
-          'Empty response body from storage',
-        );
-      }
-
-      const byteArray = await response.Body.transformToByteArray();
-
+      const body = await this.getObject(key);
+      const byteArray = await body.transformToByteArray();
       return Buffer.from(byteArray);
     } catch (e) {
       const error = e as S3ServiceException;
@@ -309,6 +296,23 @@ export class S3StorageService {
       this.logger.error('S3 configuration validation failed:', error);
       return false;
     }
+  }
+
+  private async getObject(key: string) {
+    const response = await this.s3Client.send(
+      new GetObjectCommand({
+        Bucket: this.bucketName,
+        Key: key,
+      }),
+    );
+
+    if (!response.Body) {
+      throw new InternalServerErrorException(
+        'Empty response body from storage',
+      );
+    }
+
+    return response.Body;
   }
 
   /**
