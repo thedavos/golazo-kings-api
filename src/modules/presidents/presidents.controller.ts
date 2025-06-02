@@ -28,7 +28,7 @@ import { UpdatePresidentDto } from './dto/update-president.dto';
 import { IMAGE_VALIDATION_PIPE } from '@common/constants/file-validation.constants';
 import { President } from './domain/entities/president.entity';
 import { Image } from '@/modules/image/domain/entities/image.entity';
-import { ImageService } from '@modules/image/image.service';
+import { ImageService } from '@modules/image/services/image.service';
 import { ImageEntities } from '@modules/image/domain/value-objects/image-entities.enum';
 
 @ApiTags('Presidents')
@@ -234,11 +234,11 @@ export class PresidentsController {
   ) {
     await this.presidentsService.findOne(presidentId);
 
-    await this.imageService.uploadImage(
+    await this.imageService.uploadImage({
       file,
-      ImageEntities.PRESIDENT,
-      presidentId,
-    );
+      entityType: ImageEntities.PRESIDENT,
+      entityId: presidentId,
+    });
   }
 
   @Get(':presidentId/images')
@@ -259,7 +259,7 @@ export class PresidentsController {
   ) {
     await this.presidentsService.findOne(presidentId);
 
-    return this.imageService.findImagesForEntity(
+    return this.imageService.getImagesByEntity(
       ImageEntities.PRESIDENT,
       presidentId,
     );

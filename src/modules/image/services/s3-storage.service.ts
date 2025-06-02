@@ -32,6 +32,12 @@ export interface UploadOptions {
   contentDisposition?: string;
 }
 
+export interface ImageInfo {
+  contentType: string;
+  contentLength: number;
+  isValid: boolean;
+}
+
 @Injectable()
 export class S3StorageService {
   private readonly logger = new Logger(S3StorageService.name);

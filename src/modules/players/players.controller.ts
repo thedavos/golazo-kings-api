@@ -24,7 +24,7 @@ import {
 } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { PlayersService } from './players.service';
-import { ImageService } from '@/modules/image/image.service';
+import { ImageService } from '@modules/image/services/image.service';
 import { CreatePlayerDto } from './dto/create-player.dto';
 import { UpdatePlayerDto } from './dto/update-player.dto';
 import { IMAGE_VALIDATION_PIPE } from '@/common/constants/file-validation.constants';
@@ -166,7 +166,11 @@ export class PlayersController {
   ) {
     await this.playersService.findOne(playerId);
 
-    return this.imageService.uploadImage(file, ImageEntities.PLAYER, playerId);
+    return this.imageService.uploadImage({
+      file,
+      entityType: ImageEntities.PLAYER,
+      entityId: playerId,
+    });
   }
 
   @Get(':playerId/images')
@@ -184,11 +188,7 @@ export class PlayersController {
   @ApiResponse({ status: 404, description: 'Player not found' })
   async getPlayerImages(@Param('playerId', ParseIntPipe) playerId: number) {
     await this.playersService.findOne(playerId);
-
-    return this.imageService.findImagesForEntity(
-      ImageEntities.PLAYER,
-      playerId,
-    );
+    return this.imageService.getImagesByEntity(ImageEntities.PLAYER, playerId);
   }
 
   @Delete(':playerId/images/:imageId')
