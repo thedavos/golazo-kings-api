@@ -2,7 +2,9 @@ import {
   CallHandler,
   ExecutionContext,
   HttpException,
+  HttpStatus,
   Injectable,
+  Logger,
   NestInterceptor,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
@@ -10,10 +12,12 @@ import { Request, Response } from 'express';
 import { catchError, map, Observable, throwError } from 'rxjs';
 import { RESPONSE_TYPE, STANDARD_RESPONSE_TYPE_KEY } from './constants';
 import { ApiResponseDto } from './response.dto';
-import { ApiExceptionFilter } from './api.exception';
+import { getDefaultSuccessMessage } from './api-response.dto';
 
 @Injectable()
 export class ApiResponseInterceptor implements NestInterceptor {
+  private readonly logger = new Logger(ApiResponseInterceptor.name);
+
   constructor(private reflector: Reflector) {}
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
@@ -26,38 +30,64 @@ export class ApiResponseInterceptor implements NestInterceptor {
       return next.handle();
     }
 
-    return next.handle().pipe(
-      map((res) => this.responseHandler(res, context)),
-      catchError((err: HttpException) =>
-        throwError(() => this.errorHandler(err, context)),
-      ),
-    );
-  }
-
-  responseHandler(res: any, context: ExecutionContext) {
     const ctx = context.switchToHttp();
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
-    const statusCode = response.statusCode;
+    const statusCode = response.statusCode as HttpStatus;
 
-    return new ApiResponseDto<unknown>({
-      type: 'about:blank',
-      instance: request.url,
-      success: true,
-      statusCode,
-      data: res,
-      errors: null,
-    });
+    return next.handle().pipe(
+      map((res) => {
+        if (
+          res &&
+          typeof res === 'object' &&
+          ('success' in res || 'type' in res)
+        ) {
+          return res as unknown;
+        }
+
+        const apiResponse: ApiResponseDto<unknown> = {
+          success: true,
+          statusCode,
+          message: getDefaultSuccessMessage(statusCode),
+          data: res,
+          errors: null,
+        };
+
+        response.setHeader('Content-Type', 'application/json');
+
+        // Para respuestas 201, verificar si hay header Location
+        if (
+          res &&
+          typeof res === 'object' &&
+          statusCode === HttpStatus.CREATED
+        ) {
+          const location = this.extractLocation(
+            request.path,
+            res as Record<string, any>,
+          );
+
+          if (location) {
+            response.setHeader('Location', location);
+          }
+        }
+
+        this.logger.log(
+          `API Response: ${request.method} ${request.path} - ${statusCode}`,
+        );
+
+        return apiResponse;
+      }),
+      catchError((error: HttpException) => throwError(() => error)),
+    );
   }
 
-  errorHandler(exception: HttpException, context: ExecutionContext) {
-    const apiResponse = ApiExceptionFilter.handleException(
-      context.getHandler().name,
-      exception,
-    );
-    const ctx = context.switchToHttp();
-    const response = ctx.getResponse<Response>();
-
-    response.status(apiResponse.statusCode).json(apiResponse);
+  private extractLocation(
+    basePath: string,
+    data: Record<string, any>,
+  ): string | null {
+    if (data && typeof data === 'object' && data.id) {
+      return `${basePath}/${data.id}`;
+    }
+    return null;
   }
 }

@@ -4,68 +4,89 @@ import {
   ArgumentsHost,
   HttpStatus,
   HttpException,
+  Logger,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
-import { ApiResponseDto } from './response.dto';
+import { ErrorResponseDto } from './error-response.dto';
 
 @Catch(HttpException)
 export class ApiExceptionFilter implements ExceptionFilter {
-  catch(exception: HttpException, host: ArgumentsHost) {
-    if (!exception) return;
+  private readonly logger = new Logger(ApiExceptionFilter.name);
+
+  catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
+    const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
 
-    const apiResponse = ApiExceptionFilter.handleException(
-      request.url,
-      exception,
-    );
-    const response = ctx.getResponse<Response>();
-    response
-      .header('Content-Type', 'application/problem+json')
-      .status(apiResponse.statusCode)
-      .json(apiResponse);
-  }
-
-  static handleException(
-    instance: string,
-    exception?: HttpException,
-  ): ApiResponseDto {
-    let statusCode = HttpStatus.INTERNAL_SERVER_ERROR;
-    let message = 'Internal Server Error';
-    let type = 'about:blank';
+    let status: number;
+    let title: string;
+    let detail: string;
+    const extensions: Record<string, any> = {};
 
     if (exception instanceof HttpException) {
-      type = `problem-type:${exception.name}`;
-      statusCode = exception.getStatus();
+      status = exception.getStatus();
+      const exceptionResponse = exception.getResponse();
+
+      if (typeof exceptionResponse === 'string') {
+        title = exceptionResponse;
+        detail = exceptionResponse;
+      } else if (
+        typeof exceptionResponse === 'object' &&
+        exceptionResponse !== null
+      ) {
+        const resp = exceptionResponse as Record<string, any>;
+        title = (resp.error || resp.message || exception.message) as string;
+        detail = (resp.message || resp.error || exception.message) as string;
+
+        // Agregar información de validación si existe
+        if (resp.message && Array.isArray(resp.message)) {
+          extensions.errors = resp.message;
+          detail = 'Validation failed';
+        }
+      } else {
+        title = exception.message;
+        detail = exception.message;
+      }
+    } else if (exception instanceof Error) {
+      status = HttpStatus.INTERNAL_SERVER_ERROR;
+      title = 'Internal Server Error';
+      detail =
+        process.env.NODE_ENV === 'development'
+          ? exception.message
+          : 'An unexpected error occurred';
+
+      // En desarrollo, agregar stack trace
+      if (process.env.NODE_ENV === 'development') {
+        extensions.stack = exception.stack;
+      }
+    } else {
+      status = HttpStatus.INTERNAL_SERVER_ERROR;
+      title = 'Internal Server Error';
+      detail = 'An unexpected error occurred';
     }
 
-    if (exception instanceof HttpException) {
-      message = exception.message;
-    }
-
-    const errors: Record<string, string[]> | null = null;
-
-    let responseDto: ApiResponseDto = {
-      type,
-      success: false,
-      statusCode,
-      message,
-      errors,
-      instance,
-      data: null,
+    const errorResponse: ErrorResponseDto = {
+      title,
+      status,
+      detail,
+      type: this.getProblemType(status),
+      instance: request.url,
+      timestamp: new Date().toISOString(),
+      path: request.path,
+      method: request.method,
+      ...extensions,
     };
 
-    const exceptionResponse =
-      exception instanceof HttpException ? exception.getResponse() : null;
+    this.logger.error(
+      `Error: ${request.method} ${request.path} - ${status} - ${title}`,
+      exception instanceof Error ? exception.stack : exception,
+    );
 
-    if (typeof exceptionResponse === 'object') {
-      responseDto = {
-        ...responseDto,
-        ...exceptionResponse,
-        success: false,
-      };
-    }
+    response.setHeader('Content-Type', 'application/problem+json');
+    response.status(status).json(errorResponse);
+  }
 
-    return new ApiResponseDto({ ...responseDto });
+  private getProblemType(status: number): string {
+    return `https://httpstatuses.com/${status}`;
   }
 }

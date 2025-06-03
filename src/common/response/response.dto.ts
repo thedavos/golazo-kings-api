@@ -7,14 +7,8 @@ export class ApiResponseDto<TData = any> {
   @ApiProperty()
   readonly statusCode: number;
 
-  @ApiProperty()
-  readonly type: string;
-
   @ApiPropertyOptional()
-  message?: string;
-
-  @ApiPropertyOptional()
-  instance?: string;
+  readonly message?: string;
 
   @ApiPropertyOptional({
     description:
@@ -34,10 +28,13 @@ export class ApiResponseDto<TData = any> {
       },
     },
   })
-  errors?: Record<string, string[]> | null;
+  readonly errors?: Record<string, string[]> | null;
 
-  @ApiProperty()
-  data: TData | TData[];
+  @ApiPropertyOptional()
+  readonly data?: TData | TData[];
+
+  @ApiPropertyOptional()
+  readonly meta?: Record<string, any>;
 
   constructor({
     success,
@@ -45,15 +42,13 @@ export class ApiResponseDto<TData = any> {
     message,
     errors,
     data,
-    instance,
-    type,
+    meta,
   }: ApiResponseDto<TData>) {
-    this.type = type;
     this.success = success;
     this.statusCode = statusCode;
     this.message = message;
     this.errors = errors;
     this.data = data;
-    this.instance = instance;
+    this.meta = meta;
   }
 }

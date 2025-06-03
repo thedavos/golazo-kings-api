@@ -6,6 +6,7 @@ import {
   ValidationPipe,
   ValidationPipeOptions,
 } from '@nestjs/common';
+import { ErrorResponseDto } from './error-response.dto';
 
 @Injectable()
 export class ApiValidationPipe extends ValidationPipe {
@@ -17,12 +18,16 @@ export class ApiValidationPipe extends ValidationPipe {
         field: error.property,
         messages: Object.values(error.constraints ?? []),
       }));
-      return new BadRequestException({
-        statusCode: HttpStatus.BAD_REQUEST,
-        message: 'Validation failed',
+
+      const errorResponse = new ErrorResponseDto({
+        title: 'ValidationError',
+        status: HttpStatus.BAD_REQUEST,
         errors: formattedErrors,
-        errorType: 'ValidationError',
+        timestamp: new Date().toISOString(),
+        detail: 'One or more validation errors occurred.',
       });
+
+      return new BadRequestException(errorResponse);
     };
     super(options);
   }
