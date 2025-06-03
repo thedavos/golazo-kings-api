@@ -7,8 +7,14 @@ export class ApiResponseDto<TData = any> {
   @ApiProperty()
   readonly statusCode: number;
 
+  @ApiProperty()
+  readonly type: string;
+
   @ApiPropertyOptional()
   message?: string;
+
+  @ApiPropertyOptional()
+  instance?: string;
 
   @ApiPropertyOptional({
     description:
@@ -39,11 +45,15 @@ export class ApiResponseDto<TData = any> {
     message,
     errors,
     data,
+    instance,
+    type,
   }: ApiResponseDto<TData>) {
+    this.type = type;
     this.success = success;
     this.statusCode = statusCode;
     this.message = message;
     this.errors = errors;
     this.data = data;
+    this.instance = instance;
   }
 }

@@ -6,7 +6,7 @@ import {
   NestInterceptor,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { catchError, map, Observable, throwError } from 'rxjs';
 import { RESPONSE_TYPE, STANDARD_RESPONSE_TYPE_KEY } from './constants';
 import { ApiResponseDto } from './response.dto';
@@ -37,9 +37,12 @@ export class ApiResponseInterceptor implements NestInterceptor {
   responseHandler(res: any, context: ExecutionContext) {
     const ctx = context.switchToHttp();
     const response = ctx.getResponse<Response>();
+    const request = ctx.getRequest<Request>();
     const statusCode = response.statusCode;
 
     return new ApiResponseDto<unknown>({
+      type: 'about:blank',
+      instance: request.url,
       success: true,
       statusCode,
       data: res,
@@ -48,7 +51,10 @@ export class ApiResponseInterceptor implements NestInterceptor {
   }
 
   errorHandler(exception: HttpException, context: ExecutionContext) {
-    const apiResponse = ApiExceptionFilter.handleException(exception);
+    const apiResponse = ApiExceptionFilter.handleException(
+      context.getHandler().name,
+      exception,
+    );
     const ctx = context.switchToHttp();
     const response = ctx.getResponse<Response>();
 

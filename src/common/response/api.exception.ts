@@ -5,35 +5,53 @@ import {
   HttpStatus,
   HttpException,
 } from '@nestjs/common';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { ApiResponseDto } from './response.dto';
 
-@Catch()
+@Catch(HttpException)
 export class ApiExceptionFilter implements ExceptionFilter {
-  catch(exception: unknown, host: ArgumentsHost) {
+  catch(exception: HttpException, host: ArgumentsHost) {
     if (!exception) return;
-    const apiResponse = ApiExceptionFilter.handleException(exception);
     const ctx = host.switchToHttp();
+    const request = ctx.getRequest<Request>();
+
+    const apiResponse = ApiExceptionFilter.handleException(
+      request.url,
+      exception,
+    );
     const response = ctx.getResponse<Response>();
-    response.status(apiResponse.statusCode).json(apiResponse);
+    response
+      .header('Content-Type', 'application/problem+json')
+      .status(apiResponse.statusCode)
+      .json(apiResponse);
   }
 
-  static handleException(exception: unknown): ApiResponseDto {
-    const statusCode =
-      exception instanceof HttpException
-        ? exception.getStatus()
-        : HttpStatus.INTERNAL_SERVER_ERROR;
-    const message =
-      exception instanceof HttpException
-        ? exception.message
-        : 'Internal Server Error';
+  static handleException(
+    instance: string,
+    exception?: HttpException,
+  ): ApiResponseDto {
+    let statusCode = HttpStatus.INTERNAL_SERVER_ERROR;
+    let message = 'Internal Server Error';
+    let type = 'about:blank';
+
+    if (exception instanceof HttpException) {
+      type = `problem-type:${exception.name}`;
+      statusCode = exception.getStatus();
+    }
+
+    if (exception instanceof HttpException) {
+      message = exception.message;
+    }
+
     const errors: Record<string, string[]> | null = null;
 
     let responseDto: ApiResponseDto = {
+      type,
       success: false,
       statusCode,
       message,
       errors,
+      instance,
       data: null,
     };
 
