@@ -480,11 +480,11 @@ export class ImageService {
       .substring(0, 8);
 
     if (filename) {
-      const extension = extname(filename) || '.jpg';
+      const extension = extname(filename) || '.png';
       return `${entityType}/${entityId}/${timestamp}-${urlHash}-${filename}${extension}`;
     }
 
-    return `${entityType}/${entityId}/${timestamp}-${urlHash}.jpg`;
+    return `${entityType}/${entityId}/${timestamp}-${urlHash}.png`;
   }
 
   private async createImageEntity(params: {

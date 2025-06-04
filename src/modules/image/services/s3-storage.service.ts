@@ -60,15 +60,19 @@ export class S3StorageService {
     key: string,
     options: UploadOptions = {},
   ): Promise<UploadResult> {
+    const sanitizedKey = this.sanitizeKey(key);
+    this.validateKey(sanitizedKey);
+
     const uploadParams: PutObjectCommandInput = {
       Bucket: this.bucketName,
-      Key: key,
+      Key: sanitizedKey,
       Body: buffer,
       ContentType: options.contentType || 'application/octet-stream',
-      CacheControl: options.cacheControl || 'max-age=31536000', // 1 año por defecto
+      CacheControl: options.cacheControl || 'max-age=31536000',
       ContentDisposition: options.contentDisposition,
       Metadata: {
         uploadedAt: new Date().toISOString(),
+        originalKey: key, // Guardar el key original en metadata
         ...options.metadata,
       },
     };
@@ -76,12 +80,12 @@ export class S3StorageService {
     try {
       this.logger.debug(`Uploading file with key: ${key}`);
       await this.s3Client.send(new PutObjectCommand(uploadParams));
+      const url = this.buildPublicUrl(sanitizedKey);
 
-      const url = this.buildPublicUrl(key);
+      this.logger.log(`File uploaded successfully: ${sanitizedKey}`);
 
-      this.logger.log(`File uploaded successfully: ${key}`);
       return {
-        key,
+        key: sanitizedKey,
         url,
         bucket: this.bucketName,
       };
@@ -354,5 +358,59 @@ export class S3StorageService {
     throw new InternalServerErrorException(
       `Failed to ${operation}: ${error.message}`,
     );
+  }
+
+  /**
+   * Valida que el key sea válido para S3
+   */
+  private validateKey(key: string): void {
+    if (!key || key.trim().length === 0) {
+      throw new Error('Key cannot be empty');
+    }
+
+    // Caracteres prohibidos en S3
+    // eslint-disable-next-line no-control-regex
+    const invalidChars = /[<>:"\\|?*\x00-\x1f\x7f]/;
+    if (invalidChars.test(key)) {
+      throw new Error(`Key contains invalid characters: ${key}`);
+    }
+
+    // No debe empezar con slash
+    if (key.startsWith('/')) {
+      throw new Error('Key cannot start with forward slash');
+    }
+
+    // No debe terminar con slash (a menos que sea una carpeta)
+    if (key.endsWith('/') && key !== key.replace(/\/+$/, '') + '/') {
+      throw new Error('Key cannot end with multiple slashes');
+    }
+  }
+
+  private sanitizeKey(key: string): string {
+    // Remover caracteres no válidos y espacios
+    let sanitized = key
+      .replace(/[^a-zA-Z0-9.\-_/]/g, '-') // Reemplazar caracteres especiales con guiones
+      .replace(/\s+/g, '-') // Reemplazar espacios con guiones
+      .replace(/-+/g, '-') // Reemplazar múltiples guiones con uno solo
+      .replace(/^-+|-+$/g, ''); // Remover guiones al inicio y final
+
+    // Asegurar que no empiece con slash
+    sanitized = sanitized.replace(/^\/+/, '');
+
+    // Validar longitud
+    if (sanitized.length === 0) {
+      throw new Error('Key cannot be empty after sanitization');
+    }
+
+    if (sanitized.length > 1024) {
+      throw new Error('Key too long (max 1024 characters)');
+    }
+
+    // Asegurar estructura mínima si no la tiene
+    if (!sanitized.includes('/')) {
+      sanitized = `uploads/${sanitized}`;
+    }
+
+    return sanitized;
   }
 }

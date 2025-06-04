@@ -56,7 +56,7 @@ export class ImageDownloaderService {
 
       const buffer = Buffer.from(response.data);
       const contentType: string =
-        (headers.get('Content-Type') as string) || 'image/jpeg';
+        (headers.get('Content-Type') as string) || 'image/png';
 
       // Validaciones
       this.validateImageResponse(contentType, buffer.length, options);
@@ -163,7 +163,7 @@ export class ImageDownloaderService {
     }
 
     // Opcional: validar dominios permitidos
-    const allowedDomains = ['example.com', 'images.unsplash.com']; // Configurar según necesites
+    const allowedDomains = ['kingsleague.pro']; // Configurar según necesites
     if (allowedDomains.length > 0) {
       const urlObj = new URL(url);
       if (!allowedDomains.some((domain) => urlObj.hostname.includes(domain))) {

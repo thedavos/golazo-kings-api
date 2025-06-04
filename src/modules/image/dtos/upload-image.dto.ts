@@ -1,59 +1,78 @@
+import {
+  IsString,
+  IsOptional,
+  IsUrl,
+  IsInt,
+  IsEnum,
+  IsNumber,
+  Min,
+  IsObject,
+} from 'class-validator';
 import { Image } from '@modules/image/domain/entities/image.entity';
 import { ImageEntities } from '@modules/image/domain/value-objects/image-entities.enum';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 
 export class UploadImageDto {
-  /**
-   * Archivo de imagen a subir
-   * @example "image.jpg"
-   */
   file: Express.Multer.File;
 
-  /**
-   * Tipo de entidad asociada
-   * @example "LEAGUE"
-   */
+  @IsEnum(ImageEntities)
   entityType: ImageEntities;
 
-  /**
-   * ID de la entidad asociada
-   * @example 123
-   */
+  @IsInt()
   entityId: number;
 
   /**
    * Metadatos adicionales (opcional)
    * @example { "category": "profile", "description": "Avatar del usuario" }
    */
+  @IsOptional()
   metadata?: Record<string, string>;
 }
 
 export class UploadFromUrlDto {
-  /**
-   * Url de la imagen
-   */
+  @ApiProperty({
+    description: 'URL de la imagen a descargar',
+    example: 'https://example.com/image.jpg',
+    format: 'uri',
+  })
+  @IsUrl({}, { message: 'imageUrl debe ser una URL válida' })
   imageUrl: string;
 
-  /**
-   * Nombre de la imagen
-   */
+  @ApiPropertyOptional({
+    description: 'Nombre personalizado para el archivo (opcional)',
+    example: 'team-image',
+  })
+  @IsOptional()
+  @IsString({ message: 'filename debe ser una cadena de texto' })
   filename?: string;
 
-  /**
-   * Tipo de entidad asociada
-   * @example "LEAGUE"
-   */
+  @ApiProperty({
+    description: 'Tipo de entidad asociada',
+    enum: ImageEntities,
+    example: ImageEntities.TEAM,
+  })
+  @IsEnum(ImageEntities, { message: 'entityType debe ser un valor válido' })
   entityType: ImageEntities;
 
-  /**
-   * ID de la entidad asociada
-   * @example 123
-   */
+  @ApiProperty({
+    description: 'ID de la entidad asociada',
+    example: 456,
+    minimum: 1,
+  })
+  @IsNumber({}, { message: 'entityId debe ser un número' })
+  @Min(1, { message: 'entityId debe ser mayor a 0' })
+  @Type(() => Number)
   entityId: number;
 
-  /**
-   * Metadatos adicionales (opcional)
-   * @example { "category": "profile", "description": "Avatar del usuario" }
-   */
+  @ApiPropertyOptional({
+    description: 'Metadatos adicionales (opcional)',
+    example: { category: 'team', alt: 'Imagen principal de la entidad' },
+    type: 'object',
+    additionalProperties: { type: 'string' },
+  })
+  @IsOptional()
+  @IsObject({ message: 'metadata debe ser un objeto' })
   metadata?: Record<string, string>;
 }
 

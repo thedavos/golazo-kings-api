@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  Header,
   HttpCode,
   HttpStatus,
   Param,
@@ -135,6 +136,7 @@ export class ImageController {
 
   @Post('upload-from-url')
   @HttpCode(HttpStatus.CREATED)
+  @Header('Content-Type', 'image/png')
   @ApiOperation({
     summary: 'Subir imagen desde URL',
     description:
