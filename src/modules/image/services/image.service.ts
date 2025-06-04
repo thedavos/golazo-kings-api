@@ -78,9 +78,6 @@ export class ImageService {
     }
   }
 
-  /**
-   * Sube una imagen desde una URL
-   */
   async uploadImageFromUrl(uploadDto: UploadFromUrlDto): Promise<Image> {
     const {
       imageUrl,
