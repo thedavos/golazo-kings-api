@@ -18,6 +18,7 @@ import { TeamsModule } from '@/modules/teams/teams.module';
 import { PlayersModule } from '@/modules/players/players.module';
 import { ImageModule } from '@/modules/image/image.module';
 import { AdminModule } from '@/modules/admin/admin.module';
+import { HealthModule } from '@modules/health/health.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { AdminModule } from '@/modules/admin/admin.module';
     TeamsModule,
     PlayersModule,
     AdminModule,
+    HealthModule,
   ],
   controllers: [AppController],
   providers: [AppService],

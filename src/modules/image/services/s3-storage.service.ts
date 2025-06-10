@@ -16,8 +16,11 @@ import {
   HeadObjectCommandOutput,
   GetObjectCommand,
   S3ServiceException,
+  ListObjectsV2Command,
 } from '@aws-sdk/client-s3';
 import { S3_CLIENT } from '@modules/image/provider/s3-client.provider';
+import { Result } from '@common/result.common';
+import { BaseError } from '@common/error.common';
 
 export interface UploadResult {
   key: string;
@@ -239,8 +242,6 @@ export class S3StorageService {
     isTruncated: boolean;
   }> {
     try {
-      const { ListObjectsV2Command } = await import('@aws-sdk/client-s3');
-
       const response = await this.s3Client.send(
         new ListObjectsV2Command({
           Bucket: this.bucketName,
@@ -287,12 +288,11 @@ export class S3StorageService {
   }
 
   /**
-   * Valida que la configuración del servicio sea correcta
+   * Verifica la conexión con S3 intentando listar un objeto del bucket.
+   * @returns Result<true, S3ConnectionError> - Éxito si la conexión es correcta, error si falla
    */
-  async validateConfiguration(): Promise<boolean> {
+  async checkConnection(): Promise<Result<true, BaseError>> {
     try {
-      // Intenta listar objetos para verificar conectividad
-      const { ListObjectsV2Command } = await import('@aws-sdk/client-s3');
       await this.s3Client.send(
         new ListObjectsV2Command({
           Bucket: this.bucketName,
@@ -301,10 +301,18 @@ export class S3StorageService {
       );
 
       this.logger.log('S3 configuration validated successfully');
-      return true;
+      return Result.success(true);
     } catch (error) {
-      this.logger.error('S3 configuration validation failed:', error);
-      return false;
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
+      this.logger.error('S3 connection check failed:', errorMessage);
+
+      return Result.fail(
+        new BaseError(
+          `Failed to connect to S3: ${errorMessage}`,
+          error as Error,
+        ),
+      );
     }
   }
 

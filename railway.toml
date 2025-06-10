@@ -3,14 +3,15 @@
 [build]
 builder = "dockerfile"
 dockerfilePath = "Dockerfile"
-buildCommand = "pnpm install && pnpm run build"
+targetPlatform = "linux/amd64"
 
 [deploy]
-startCommand = "pnpm run start:prod"
+startCommand = "node dist/main.js"
 healthcheckPath = "/health"
 healthcheckTimeout = 100
 restartPolicyType = "on_failure"
 restartPolicyMaxRetries = 3
+
 
 [database]
 engine = "mysql"
@@ -20,7 +21,6 @@ version = "8.0"
 name = "golazo-kings-api"
 port = 3000
 internal_port = 3000
-protocol = "http"
 
 [[service.environment]]
 key = "NODE_ENV"
