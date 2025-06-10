@@ -36,11 +36,11 @@ export class ApiExceptionFilter implements ExceptionFilter {
       ) {
         const resp = exceptionResponse as Record<string, any>;
         title = (resp.error || resp.message || exception.message) as string;
-        detail = (resp.message || resp.error || exception.message) as string;
+        detail = (resp.detail || resp.error || exception.message) as string;
 
         // Agregar información de validación si existe
-        if (resp.message && Array.isArray(resp.message)) {
-          extensions.errors = resp.message;
+        if (resp.errors && Array.isArray(resp.errors)) {
+          extensions.errors = resp.errors;
           detail = 'Validation failed';
         }
       } else {
