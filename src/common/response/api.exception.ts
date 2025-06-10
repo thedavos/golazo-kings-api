@@ -6,7 +6,7 @@ import {
   HttpException,
   Logger,
 } from '@nestjs/common';
-import { Request, Response } from 'express';
+import { FastifyReply, FastifyRequest } from 'fastify';
 import { ErrorResponseDto } from './error-response.dto';
 
 @Catch(HttpException)
@@ -15,8 +15,8 @@ export class ApiExceptionFilter implements ExceptionFilter {
 
   catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
-    const response = ctx.getResponse<Response>();
-    const request = ctx.getRequest<Request>();
+    const response = ctx.getResponse<FastifyReply>();
+    const request = ctx.getRequest<FastifyRequest>();
 
     let status: number;
     let title: string;
@@ -72,18 +72,20 @@ export class ApiExceptionFilter implements ExceptionFilter {
       type: this.getProblemType(status),
       instance: request.url,
       timestamp: new Date().toISOString(),
-      path: request.path,
+      path: request.url,
       method: request.method,
       ...extensions,
     };
 
     this.logger.error(
-      `Error: ${request.method} ${request.path} - ${status} - ${title}`,
+      `Error: ${request.method} ${request.url} - ${status} - ${title}`,
       exception instanceof Error ? exception.stack : exception,
     );
 
-    response.setHeader('Content-Type', 'application/problem+json');
-    response.status(status).json(errorResponse);
+    response
+      .code(status)
+      .header('Content-Type', 'application/problem+json')
+      .send(errorResponse);
   }
 
   private getProblemType(status: number): string {

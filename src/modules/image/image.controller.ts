@@ -13,7 +13,6 @@ import {
   Res,
   UploadedFile,
   UploadedFiles,
-  UseInterceptors,
 } from '@nestjs/common';
 import {
   ApiBody,
@@ -27,8 +26,8 @@ import {
   ApiTags,
   getSchemaPath,
 } from '@nestjs/swagger';
-import { Response } from 'express';
-import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
+import { FastifyReply } from 'fastify';
+import { MultipartFile } from '@fastify/multipart';
 import { ImageService } from '@modules/image/services/image.service';
 import { ImageEntities } from '@modules/image/domain/value-objects/image-entities.enum';
 import {
@@ -48,7 +47,6 @@ export class ImageController {
   constructor(private readonly imageService: ImageService) {}
 
   @Post('upload')
-  @UseInterceptors(FileInterceptor('file'))
   @ApiOperation({
     summary: 'Subir una imagen desde archivo',
     description:
@@ -124,7 +122,7 @@ export class ImageController {
     },
   })
   async uploadImage(
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFile() file: MultipartFile,
     @Body() body: { entityType: ImageEntities; entityId: number },
   ) {
     return await this.imageService.uploadImage({
@@ -210,7 +208,6 @@ export class ImageController {
 
   // Subir múltiples archivos
   @Post('upload-multiple')
-  @UseInterceptors(FilesInterceptor('files', 10))
   @ApiOperation({
     summary: 'Subir múltiples imágenes',
     description:
@@ -223,7 +220,7 @@ export class ImageController {
     schema: { $ref: getSchemaPath(BulkUploadResultDto) },
   })
   async uploadMultiple(
-    @UploadedFiles() files: Express.Multer.File[],
+    @UploadedFiles() files: MultipartFile[],
     @Body() body: { entityType: ImageEntities; entityId: number },
   ) {
     return await this.imageService.uploadMultipleImages(
@@ -395,17 +392,17 @@ export class ImageController {
   @Get(':id/download')
   async downloadImage(
     @Param('id', ParseIntPipe) id: number,
-    @Res() res: Response,
+    @Res() reply: FastifyReply,
   ) {
     const { buffer, image } = await this.imageService.downloadImage(id);
 
-    res.set({
-      'Content-Type': image.mimeType,
-      'Content-Length': buffer.length.toString(),
-      'Content-Disposition': `attachment; filename="${image.originalFilename}"`,
-    });
-
-    res.send(buffer);
+    reply
+      .headers({
+        'Content-Type': image.mimeType,
+        'Content-Length': buffer.length.toString(),
+        'Content-Disposition': `attachment; filename="${image.originalFilename}"`,
+      })
+      .send(buffer);
   }
 
   @Post(':id/copy')

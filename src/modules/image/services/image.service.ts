@@ -24,6 +24,7 @@ import {
   UploadImageDto,
 } from '@modules/image/dtos/upload-image.dto';
 import { ImageStatsDto } from '@modules/image/dtos/image-stats.dto';
+import { MultipartFile } from '@fastify/multipart';
 
 @Injectable()
 export class ImageService {
@@ -38,6 +39,7 @@ export class ImageService {
 
   async uploadImage(uploadDto: UploadImageDto): Promise<Image> {
     const { file, entityType, entityId, metadata = {} } = uploadDto;
+    const buffer = await file.toBuffer();
 
     try {
       this.validateImageFile(file);
@@ -45,18 +47,18 @@ export class ImageService {
       const uploadKey = this.generateUploadKey(
         entityType,
         entityId,
-        file.originalname,
+        file.filename,
       );
 
       const uploadResult = await this.s3StorageService.uploadFile(
-        file.buffer,
+        buffer,
         uploadKey,
         {
           contentType: file.mimetype,
           metadata: {
             entityType: entityType.toString(),
             entityId: entityId.toString(),
-            originalName: file.originalname,
+            originalName: file.filename,
             ...metadata,
           },
         },
@@ -138,7 +140,7 @@ export class ImageService {
    * Sube múltiples imágenes desde archivos
    */
   async uploadMultipleImages(
-    files: Express.Multer.File[],
+    files: MultipartFile[],
     entityType: ImageEntities,
     entityId: number,
     metadata: Record<string, string> = {},
@@ -175,7 +177,7 @@ export class ImageService {
   }
 
   /**
-   * Sube múltiples imágenes desde URLs
+   * Sube múltiples imágenes desde distintas URL
    */
   async uploadMultipleImagesFromUrls(
     urls: string[],
@@ -426,7 +428,7 @@ export class ImageService {
     await this.s3StorageService.deleteFile(key);
   }
 
-  private validateImageFile(file: Express.Multer.File): void {
+  private validateImageFile(file: MultipartFile): void {
     const allowedMimeTypes = [
       'image/jpeg',
       'image/png',
@@ -442,7 +444,7 @@ export class ImageService {
 
     const maxSize = 50 * 1024 * 1024; // 50MB
 
-    if (file.size > maxSize) {
+    if (file.file.bytesRead > maxSize) {
       throw new BadRequestException(
         `File too large. Maximum size: ${maxSize / (1024 * 1024)}MB`,
       );
@@ -486,7 +488,7 @@ export class ImageService {
 
   private async createImageEntity(params: {
     uploadResult: UploadResult;
-    file: Express.Multer.File;
+    file: MultipartFile;
     entityType: ImageEntities;
     entityId: number;
   }): Promise<Image> {
@@ -497,8 +499,8 @@ export class ImageService {
       key: uploadResult.key,
       bucket: uploadResult.bucket,
       mimeType: file.mimetype,
-      size: file.size,
-      originalFilename: file.originalname,
+      size: file.file.bytesRead,
+      originalFilename: file.filename,
       entityType,
       entityId,
     });

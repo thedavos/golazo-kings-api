@@ -1,3 +1,4 @@
+import { MultipartFile } from '@fastify/multipart';
 import {
   IsString,
   IsOptional,
@@ -14,7 +15,7 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 
 export class UploadImageDto {
-  file: Express.Multer.File;
+  file: MultipartFile;
 
   @IsEnum(ImageEntities)
   entityType: ImageEntities;
@@ -79,7 +80,7 @@ export class UploadFromUrlDto {
 export class BulkUploadResultDto {
   successful: Image[];
   failed: Array<{
-    file?: Express.Multer.File;
+    file?: MultipartFile;
     url?: string;
     error: string;
   }>;

@@ -8,14 +8,16 @@ import {
   NestInterceptor,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { Request, Response } from 'express';
+import { FastifyRequest, FastifyReply } from 'fastify';
 import { catchError, map, Observable, throwError } from 'rxjs';
 import { RESPONSE_TYPE, STANDARD_RESPONSE_TYPE_KEY } from './constants';
 import { ApiResponseDto } from './response.dto';
 import { getDefaultSuccessMessage } from './api-response.dto';
 
 @Injectable()
-export class ApiResponseInterceptor implements NestInterceptor {
+export class ApiResponseInterceptor<T>
+  implements NestInterceptor<T, ApiResponseDto<T>>
+{
   private readonly logger = new Logger(ApiResponseInterceptor.name);
 
   constructor(private reflector: Reflector) {}
@@ -31,48 +33,49 @@ export class ApiResponseInterceptor implements NestInterceptor {
     }
 
     const ctx = context.switchToHttp();
-    const response = ctx.getResponse<Response>();
-    const request = ctx.getRequest<Request>();
+    const response = ctx.getResponse<FastifyReply>();
+    const request = ctx.getRequest<FastifyRequest>();
+
     const statusCode = response.statusCode as HttpStatus;
 
     return next.handle().pipe(
-      map((res) => {
+      map((data) => {
         if (
-          res &&
-          typeof res === 'object' &&
-          ('success' in res || 'type' in res)
+          data &&
+          typeof data === 'object' &&
+          ('success' in data || 'type' in data)
         ) {
-          return res as unknown;
+          return data as unknown;
         }
 
-        const apiResponse: ApiResponseDto<unknown> = {
+        const apiResponse: ApiResponseDto<T> = {
           success: true,
           statusCode,
           message: getDefaultSuccessMessage(statusCode),
-          data: res,
+          data: data as T,
           errors: null,
         };
 
-        response.setHeader('Content-Type', 'application/json');
+        response.header('Content-Type', 'application/json');
 
         // Para respuestas 201, verificar si hay header Location
         if (
-          res &&
-          typeof res === 'object' &&
+          data &&
+          typeof data === 'object' &&
           statusCode === HttpStatus.CREATED
         ) {
           const location = this.extractLocation(
-            request.path,
-            res as Record<string, any>,
+            request.url,
+            data as Record<string, any>,
           );
 
           if (location) {
-            response.setHeader('Location', location);
+            response.header('Location', location);
           }
         }
 
         this.logger.log(
-          `API Response: ${request.method} ${request.path} - ${statusCode}`,
+          `API Response: ${request.method} ${request.url} - ${statusCode}`,
         );
 
         return apiResponse;

@@ -7,7 +7,6 @@ import {
   Param,
   Delete,
   Query,
-  UseInterceptors,
   UploadedFile,
   ParseIntPipe,
   HttpStatus,
@@ -22,7 +21,6 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
-import { FileInterceptor } from '@nestjs/platform-express';
 import { PlayersService } from './players.service';
 import { ImageService } from '@modules/image/services/image.service';
 import { CreatePlayerDto } from './dto/create-player.dto';
@@ -31,6 +29,7 @@ import { IMAGE_VALIDATION_PIPE } from '@/common/constants/file-validation.consta
 import { ImageEntities } from '@/modules/image/domain/value-objects/image-entities.enum';
 import { Image } from '@/modules/image/domain/entities/image.entity';
 import { Player } from './domain/entities/player.entity';
+import { MultipartFile } from '@fastify/multipart';
 
 @ApiTags('Players')
 @Controller('players') // Ruta base: /players
@@ -123,7 +122,6 @@ export class PlayersController {
   }
 
   @Post(':playerId/images')
-  @UseInterceptors(FileInterceptor('file'))
   @ApiConsumes('multipart/form-data')
   @ApiOperation({ summary: 'Upload an image for a specific player' })
   @ApiParam({
@@ -162,7 +160,7 @@ export class PlayersController {
   async addPlayerImage(
     @Param('playerId', ParseIntPipe) playerId: number,
     @UploadedFile(IMAGE_VALIDATION_PIPE)
-    file: Express.Multer.File,
+    file: MultipartFile,
   ) {
     await this.playersService.findOne(playerId);
 

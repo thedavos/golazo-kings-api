@@ -10,7 +10,6 @@ import {
   ParseUUIDPipe,
   HttpCode,
   HttpStatus,
-  UseInterceptors,
   UploadedFile,
 } from '@nestjs/common';
 import {
@@ -21,7 +20,6 @@ import {
   ApiBody,
   ApiConsumes,
 } from '@nestjs/swagger';
-import { FileInterceptor } from '@nestjs/platform-express';
 import { PresidentsService } from './presidents.service';
 import { CreatePresidentDto } from './dto/create-president.dto';
 import { UpdatePresidentDto } from './dto/update-president.dto';
@@ -30,6 +28,7 @@ import { President } from './domain/entities/president.entity';
 import { Image } from '@/modules/image/domain/entities/image.entity';
 import { ImageService } from '@modules/image/services/image.service';
 import { ImageEntities } from '@modules/image/domain/value-objects/image-entities.enum';
+import { MultipartFile } from '@fastify/multipart';
 
 @ApiTags('Presidents')
 @Controller('presidents')
@@ -77,7 +76,7 @@ export class PresidentsController {
     return this.presidentsService.findOne(id);
   }
 
-  @Get(':uuid')
+  @Get('uuid/:uuid')
   @ApiOperation({ summary: 'Obtener un presidente por su UUID' })
   @ApiParam({ name: 'uuid', description: 'UUID del presidente', type: String })
   @ApiResponse({
@@ -191,7 +190,6 @@ export class PresidentsController {
   }
 
   @Post(':presidentId/images')
-  @UseInterceptors(FileInterceptor('file'))
   @ApiConsumes('multipart/form-data')
   @ApiOperation({ summary: 'Upload an image for a specific president' })
   @ApiParam({
@@ -230,7 +228,7 @@ export class PresidentsController {
   async addPresidentImage(
     @Param('presidentId', ParseIntPipe) presidentId: number,
     @UploadedFile(IMAGE_VALIDATION_PIPE)
-    file: Express.Multer.File,
+    file: MultipartFile,
   ) {
     await this.presidentsService.findOne(presidentId);
 

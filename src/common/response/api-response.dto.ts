@@ -1,5 +1,5 @@
 import { HttpStatus } from '@nestjs/common';
-import { Response } from 'express';
+import { FastifyReply } from 'fastify';
 import { ApiResponseDto } from './response.dto';
 import { ErrorResponseDto } from './error-response.dto';
 
@@ -23,7 +23,7 @@ export const getDefaultSuccessMessage = (status: HttpStatus): string => {
 
 export class ApiResponse {
   static success<T>(
-    res: Response,
+    reply: FastifyReply,
     data?: T,
     message?: string,
     status: HttpStatus = HttpStatus.OK,
@@ -40,14 +40,17 @@ export class ApiResponse {
       },
     };
 
-    res.status(status).json(response);
+    reply
+      .code(status)
+      .header('Content-Type', 'application/json')
+      .send(response);
   }
 
   /**
    * Envía una respuesta de error siguiendo RFC 7807 (Problem Details)
    */
   static error(
-    res: Response,
+    reply: FastifyReply,
     title: string,
     status: HttpStatus,
     detail?: string,
@@ -55,32 +58,34 @@ export class ApiResponse {
     instance?: string,
     extensions?: Record<string, any>,
   ) {
+    const request = reply.request;
+
     const errorResponse: ErrorResponseDto = {
       type: type || `https://httpstatuses.com/${status}`,
       title,
       status,
       detail,
-      instance: instance || res.req.url,
+      instance: instance || request.url,
       ...extensions,
     };
 
-    // Se agrega headers RFC 7807
-    res.setHeader('Content-Type', 'application/problem+json');
-
-    res.status(status).json(errorResponse);
+    reply
+      .code(status)
+      .header('Content-Type', 'application/json')
+      .send(errorResponse);
   }
 
   /**
    * Respuesta para errores de validación (400)
    */
-  static badRequest(res: Response, errors: any[], detail?: string) {
+  static badRequest(reply: FastifyReply, errors: any[], detail?: string) {
     return this.error(
-      res,
+      reply,
       'Validation Failed',
       HttpStatus.BAD_REQUEST,
       detail || 'The request contains invalid parameters',
       'https://example.com/problems/validation-error',
-      res.req.url,
+      reply.request.url,
       { errors },
     );
   }
@@ -88,11 +93,11 @@ export class ApiResponse {
   /**
    * Respuesta para recursos no encontrados (404)
    */
-  static notFound(res: Response, resource?: string, detail?: string) {
+  static notFound(reply: FastifyReply, resource?: string, detail?: string) {
     const resourceName = resource || 'Resource';
 
     return this.error(
-      res,
+      reply,
       `${resourceName} Not Found`,
       HttpStatus.NOT_FOUND,
       detail ||
@@ -104,9 +109,9 @@ export class ApiResponse {
   /**
    * Respuesta para errores de autorización (401)
    */
-  static unauthorized(res: Response, detail?: string) {
+  static unauthorized(reply: FastifyReply, detail?: string) {
     return this.error(
-      res,
+      reply,
       'Unauthorized',
       HttpStatus.UNAUTHORIZED,
       detail || 'Authentication is required to access this resource',
@@ -117,9 +122,9 @@ export class ApiResponse {
   /**
    * Respuesta para errores de permisos (403)
    */
-  static forbidden(res: Response, detail?: string) {
+  static forbidden(reply: FastifyReply, detail?: string) {
     return this.error(
-      res,
+      reply,
       'Forbidden',
       HttpStatus.FORBIDDEN,
       detail || 'You do not have permission to access this resource',
@@ -130,9 +135,9 @@ export class ApiResponse {
   /**
    * Respuesta para errores internos del servidor (500)
    */
-  static internalServerError(res: Response, detail?: string) {
+  static internalServerError(reply: FastifyReply, detail?: string) {
     return this.error(
-      res,
+      reply,
       'Internal Server Error',
       HttpStatus.INTERNAL_SERVER_ERROR,
       detail || 'An unexpected error occurred',
@@ -144,17 +149,17 @@ export class ApiResponse {
    * Respuesta para recursos creados (201)
    */
   static created<T>(
-    res: Response,
+    reply: FastifyReply,
     data: T,
     message?: string,
     location?: string,
   ) {
     if (location) {
-      res.setHeader('Location', location);
+      reply.header('Location', location);
     }
 
     this.success(
-      res,
+      reply,
       data,
       message || 'Resource created successfully',
       HttpStatus.CREATED,
@@ -164,16 +169,16 @@ export class ApiResponse {
   /**
    * Respuesta sin contenido (204)
    */
-  static noContent(res: Response): Response {
-    return res.status(HttpStatus.NO_CONTENT).send();
+  static noContent(reply: FastifyReply): FastifyReply {
+    return reply.code(HttpStatus.NO_CONTENT).send();
   }
 
   /**
    * Respuesta para operaciones aceptadas pero pendientes (202)
    */
-  static accepted<T>(res: Response, data?: T, message?: string) {
+  static accepted<T>(reply: FastifyReply, data?: T, message?: string) {
     this.success(
-      res,
+      reply,
       data,
       message || 'Request accepted and is being processed',
       HttpStatus.ACCEPTED,
