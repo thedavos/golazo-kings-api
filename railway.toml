@@ -1,14 +1,13 @@
 # railway.toml
 
 [build]
-builder = "dockerfile"
+builder = "DOCKERFILE"
 dockerfilePath = "Dockerfile"
-targetPlatform = "linux/amd64"
 
 [deploy]
 startCommand = "node dist/main.js"
-healthcheckPath = "/health"
-healthcheckTimeout = 100
+healthcheckPath = "/api/v1/health"
+healthcheckTimeout = 300
 restartPolicyType = "on_failure"
 restartPolicyMaxRetries = 3
 
