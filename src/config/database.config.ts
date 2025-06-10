@@ -9,7 +9,7 @@ export default registerAs('database', () => ({
   database: process.env.DB_DATABASE,
   logging: process.env.DB_LOGGING === 'true',
   entities: ['src/**/*.entity{.ts,.js}'],
-  migrations: ['src/migrations/*.migrate{.ts,.js}'],
+  migrations: ['/src/migrations/*{.ts,.js}'],
   migrationsTableName: 'migrations',
   synchronize: false,
   migrationsRun: false,

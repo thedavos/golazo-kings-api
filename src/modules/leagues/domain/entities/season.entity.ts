@@ -7,7 +7,6 @@ import {
   ManyToOne,
   OneToMany,
   JoinColumn,
-  Index,
   Generated,
   PrimaryColumn,
 } from 'typeorm';
@@ -21,7 +20,7 @@ export class Season {
   @PrimaryGeneratedColumn('increment', { type: 'int' })
   id: number;
 
-  @PrimaryColumn({ unique: true })
+  @PrimaryColumn({ type: 'varchar', length: 36, unique: true })
   @Generated('uuid')
   uuid: string;
 
@@ -44,22 +43,27 @@ export class Season {
   })
   status: SeasonStatus;
 
-  @Index()
   @Column()
   leagueId: number;
+
+  @Column()
+  leagueUuid: string;
 
   @ManyToOne(() => League, (league) => league.seasons, {
     onDelete: 'CASCADE',
     onUpdate: 'CASCADE',
     nullable: false,
   })
-  @JoinColumn({ name: 'leagueId' })
+  @JoinColumn([
+    { name: 'leagueId', referencedColumnName: 'id' },
+    { name: 'leagueUuid', referencedColumnName: 'uuid' },
+  ])
   league: League;
 
   @OneToMany(() => Standing, (standing) => standing.season)
   standings: Standing[];
 
-  @OneToMany(() => Match, (match) => match.season) // Relación inversa con Match
+  @OneToMany(() => Match, (match) => match.season)
   matches: Match[];
 
   @CreateDateColumn()

@@ -23,7 +23,7 @@ export class Match {
   @Generated('uuid')
   uuid: string;
 
-  @Index() // Indexar por fecha suele ser útil
+  @Index()
   @Column({ type: 'datetime', comment: 'Fecha y hora UTC del partido' })
   matchDate: Date;
 
@@ -66,43 +66,55 @@ export class Match {
   })
   details: string | null;
 
-  @Index()
   @Column({ comment: 'FK a la temporada a la que pertenece el partido' })
   seasonId: number;
 
-  @Index()
+  @Column()
+  seasonUuid: string;
+
   @Column({ comment: 'FK al equipo local' })
   homeTeamId: number;
 
-  @Index()
+  @Column()
+  homeTeamUuid: string;
+
   @Column({ comment: 'FK al equipo visitante' })
   awayTeamId: number;
 
+  @Column()
+  awayTeamUuid: string;
+
   @ManyToOne(() => Season, (season) => season.matches, {
-    nullable: false,
     onDelete: 'CASCADE',
     onUpdate: 'CASCADE',
+    nullable: false,
   })
-  @JoinColumn({ name: 'seasonId' })
+  @JoinColumn([
+    { name: 'seasonId', referencedColumnName: 'id' },
+    { name: 'seasonUuid', referencedColumnName: 'uuid' },
+  ])
   season: Season;
 
   @ManyToOne(() => Team, {
-    nullable: false,
-    onDelete: 'RESTRICT',
+    onDelete: 'CASCADE',
     onUpdate: 'CASCADE',
+    nullable: false,
   })
-  @JoinColumn({ name: 'homeTeamId' })
+  @JoinColumn([
+    { name: 'homeTeamId', referencedColumnName: 'id' },
+    { name: 'homeTeamUuid', referencedColumnName: 'uuid' },
+  ])
   homeTeam: Team;
 
-  @ManyToOne(
-    () => Team,
-    /* No añadimos relación inversa en Team */ {
-      nullable: false,
-      onDelete: 'RESTRICT', // Misma consideración que homeTeam
-      onUpdate: 'CASCADE',
-    },
-  )
-  @JoinColumn({ name: 'awayTeamId' })
+  @ManyToOne(() => Team, {
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
+    nullable: false,
+  })
+  @JoinColumn([
+    { name: 'awayTeamId', referencedColumnName: 'id' },
+    { name: 'awayTeamUuid', referencedColumnName: 'uuid' },
+  ])
   awayTeam: Team;
 
   // --- Timestamps ---

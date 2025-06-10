@@ -6,7 +6,6 @@ import {
   UpdateDateColumn,
   ManyToOne,
   JoinColumn,
-  Index,
   Generated,
   PrimaryColumn,
 } from 'typeorm';
@@ -60,16 +59,21 @@ export class Player {
   @Column({ type: 'varchar', length: 255, nullable: true })
   imageUrl: string;
 
-  @Index()
-  @Column()
+  @Column({ type: 'int' })
   teamId: number;
+
+  @Column()
+  teamUuid: string;
 
   @ManyToOne(() => Team, (team) => team.players, {
     onDelete: 'CASCADE',
     onUpdate: 'CASCADE',
     nullable: false,
   })
-  @JoinColumn({ name: 'teamId' })
+  @JoinColumn([
+    { name: 'teamId', referencedColumnName: 'id' },
+    { name: 'teamUuid', referencedColumnName: 'uuid' },
+  ])
   team: Team;
 
   @CreateDateColumn()

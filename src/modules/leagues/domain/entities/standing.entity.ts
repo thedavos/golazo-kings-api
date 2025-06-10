@@ -7,7 +7,6 @@ import {
   ManyToOne,
   JoinColumn,
   Index,
-  Unique,
   Generated,
   PrimaryColumn,
 } from 'typeorm';
@@ -15,12 +14,11 @@ import { Season } from '@/modules/leagues/domain/entities/season.entity';
 import { Team } from '@/modules/teams/domain/entities/team.entity';
 
 @Entity('standings')
-@Unique(['seasonId', 'teamId']) // Un equipo solo puede tener una fila por temporada
 export class Standing {
   @PrimaryGeneratedColumn('increment', { type: 'int' })
   id: number;
 
-  @PrimaryColumn({ unique: true })
+  @PrimaryColumn({ type: 'varchar', length: 36, unique: true })
   @Generated('uuid')
   uuid: string;
 
@@ -59,20 +57,28 @@ export class Standing {
   description: string;
 
   // --- Relaciones ---
-  @Index()
   @Column({ type: 'int' })
-  seasonId: number; // FK a Season
+  seasonId: number;
 
-  @Index()
   @Column()
-  teamId: number; // FK a Team
+  seasonUuid: string;
 
+  @Column({ type: 'int' })
+  teamId: number;
+
+  @Column()
+  teamUuid: string;
+
+  @Index(['seasonId', 'teamId'], { unique: true })
   @ManyToOne(() => Season, (season) => season.standings, {
     onDelete: 'CASCADE',
     onUpdate: 'CASCADE',
     nullable: false,
   })
-  @JoinColumn({ name: 'seasonId' })
+  @JoinColumn([
+    { name: 'seasonId', referencedColumnName: 'id' },
+    { name: 'seasonUuid', referencedColumnName: 'uuid' },
+  ])
   season: Season;
 
   @ManyToOne(() => Team, (team) => team.standings, {
@@ -80,7 +86,10 @@ export class Standing {
     onUpdate: 'CASCADE',
     nullable: false,
   })
-  @JoinColumn({ name: 'teamId' })
+  @JoinColumn([
+    { name: 'teamId', referencedColumnName: 'id' },
+    { name: 'teamUuid', referencedColumnName: 'uuid' },
+  ])
   team: Team;
 
   @CreateDateColumn()
