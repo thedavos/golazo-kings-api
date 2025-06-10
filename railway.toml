@@ -1,0 +1,124 @@
+# railway.toml
+
+[build]
+builder = "dockerfile"
+dockerfilePath = "Dockerfile"
+buildCommand = "pnpm install && pnpm run build"
+
+[deploy]
+startCommand = "pnpm run start:prod"
+healthcheckPath = "/health"
+healthcheckTimeout = 100
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 3
+
+[database]
+engine = "mysql"
+version = "8.0"
+
+[service]
+name = "golazo-kings-api"
+port = 3000
+internal_port = 3000
+protocol = "http"
+
+[[service.environment]]
+key = "NODE_ENV"
+value = "production"
+
+[[service.environment]]
+key = "API_PREFIX"
+value = "api"
+
+[[service.environment]]
+key = "API_VERSION"
+value = "v1"
+
+[[service.environment]]
+key = "HOST"
+value = "0.0.0.0"
+
+# Variables de Base de Datos - Se configurarán automáticamente por Railway
+[[service.environment]]
+key = "DB_HOST"
+fromService = "mysql"
+fromServiceProperty = "host"
+
+[[service.environment]]
+key = "DB_PORT"
+fromService = "mysql"
+fromServiceProperty = "port"
+
+[[service.environment]]
+key = "DB_USERNAME"
+fromService = "mysql"
+fromServiceProperty = "username"
+
+[[service.environment]]
+key = "DB_PASSWORD"
+fromService = "mysql"
+fromServiceProperty = "password"
+
+[[service.environment]]
+key = "DB_DATABASE"
+fromService = "mysql"
+fromServiceProperty = "database"
+
+[[service.environment]]
+key = "DB_SYNCHRONIZE"
+value = "false"
+
+[[service.environment]]
+key = "DB_LOGGING"
+value = "false"
+
+# Variables de Backblaze B2 - Se deben configurar en el dashboard de Railway
+[[service.environment]]
+key = "B2_ACCESS_KEY_ID"
+sync = true
+
+[[service.environment]]
+key = "B2_SECRET_ACCESS_KEY"
+sync = true
+
+[[service.environment]]
+key = "B2_BUCKET_NAME"
+sync = true
+
+[[service.environment]]
+key = "B2_ENDPOINT"
+sync = true
+
+[[service.environment]]
+key = "B2_REGION"
+sync = true
+
+[[service.environment]]
+key = "B2_PUBLIC_URL_BASE"
+sync = true
+
+# Variables de Scraping
+[[service.environment]]
+key = "KINGS_LEAGUE_BASE_URL"
+sync = true
+
+[[service.environment]]
+key = "QUEENS_LEAGUE_BASE_URL"
+sync = true
+
+[scaling]
+min = 1
+max = 3
+target_memory_percentage = 80
+target_cpu_percentage = 80
+
+[metrics]
+enabled = true
+path = "/metrics"
+port = 9090
+
+[volumes]
+enabled = false
+
+[network]
+external = true
