@@ -59,6 +59,9 @@ importers:
       dotenv:
         specifier: 16.4.7
         version: 16.4.7
+      fastify:
+        specifier: ^5.3.3
+        version: 5.3.3
       mysql2:
         specifier: ^3.14.0
         version: 3.14.1
