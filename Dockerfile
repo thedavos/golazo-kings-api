@@ -11,11 +11,11 @@ RUN corepack prepare pnpm@latest --activate
 # Copy dependency definition files
 COPY package.json pnpm-lock.yaml ./
 
+# Copy configuration files needed for build
+COPY tsconfig*.json nest-cli.json ./
+
 # Install ALL dependencies (including devDependencies needed for build)
 RUN pnpm install --frozen-lockfile
-
-# Copy the rest of the application source code
-COPY . .
 
 #-----------------------------------------
 # Stage 2: Builder - Creates the production build
@@ -23,11 +23,14 @@ COPY . .
 FROM base AS builder
 WORKDIR /usr/src/app
 
+# Copy source code
+COPY src/ ./src/
+
 # Run the build command
 RUN npm run build
-# Optional: Prune dev dependencies AFTER build if needed elsewhere,
-# but we'll reinstall prod deps cleanly in the final stage.
-# RUN pnpm prune --prod
+
+# Verify the build output exists
+RUN ls -la dist/
 
 #-----------------------------------------
 # Stage 3: Production - Final lean image
@@ -42,9 +45,14 @@ RUN corepack prepare pnpm@latest --activate
 
 ENV NODE_ENV=production
 
-# Copy necessary files from the builder stage
-COPY --from=builder /usr/src/app/package.json /usr/src/app/pnpm-lock.yaml ./
+# Copy package files
+COPY package.json pnpm-lock.yaml ./
+
+# Copy the compiled application
 COPY --from=builder /usr/src/app/dist ./dist
+
+# Copy configuration files needed for runtime
+COPY tsconfig*.json nest-cli.json ./
 
 # Install ONLY production dependencies
 RUN pnpm install --prod --frozen-lockfile
@@ -64,6 +72,9 @@ CMD ["node", "dist/main.js"]
 FROM base AS development
 
 WORKDIR /usr/src/app
+
+# Copy source code for development
+COPY . .
 
 ENV NODE_ENV=development
 
