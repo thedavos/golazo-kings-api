@@ -47,7 +47,8 @@ async function bootstrap() {
   app.setGlobalPrefix(appConfig?.apiPrefix as string);
 
   app.enableVersioning({
-    type: VersioningType.URI,
+    type: VersioningType.HEADER,
+    header: 'X-API-Version',
     defaultVersion: appConfig?.defaultApiVersion,
   });
 
@@ -74,6 +75,14 @@ async function bootstrap() {
   if (swaggerConfig?.enabled) {
     const config = new DocumentBuilder()
       .setTitle(swaggerConfig.title)
+      .addGlobalParameters({
+        in: 'header',
+        name: 'X-API-Version',
+        required: true,
+        schema: {
+          example: '1',
+        },
+      })
       .setDescription(swaggerConfig.description)
       .setVersion(swaggerConfig.version)
       .build();

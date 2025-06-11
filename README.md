@@ -148,46 +148,46 @@ Basado en configuraciones por defecto (`.env.example`, `src/config/app.config.ts
 *   `API_VERSION`: `v1` (default)
 *   `SWAGGER_PATH`: `api/docs`
 
-Así, la URL por defecto sería: `http://localhost:3000/api/v1/api/docs`
+Así, la URL por defecto sería: `http://localhost:3000/api/api/docs`
 
-**Nota:** El `SWAGGER_PATH` por defecto es `api/docs`. Si quieres la documentación en `http://localhost:3000/api/v1/docs`, debes cambiar `SWAGGER_PATH` en la configuración de tu entorno a `docs`.
+**Nota:** El `SWAGGER_PATH` por defecto es `api/docs`. Si quieres la documentación en `http://localhost:3000/api/docs`, debes cambiar `SWAGGER_PATH` en la configuración de tu entorno a `docs`.
 
 ## Endpoints Principales
 ### Ligas
-- `GET /api/v1/leagues` - Obtener todas las ligas
-- `POST /api/v1/leagues` - Crear nueva liga
-- `GET /api/v1/leagues/:id` - Obtener liga específica
-- `PUT /api/v1/leagues/:id` - Actualizar liga
-- `DELETE /api/v1/leagues/:id` - Eliminar liga
+- `GET /api/leagues` - Obtener todas las ligas
+- `POST /api/leagues` - Crear nueva liga
+- `GET /api/leagues/:id` - Obtener liga específica
+- `PUT /api/leagues/:id` - Actualizar liga
+- `DELETE /api/leagues/:id` - Eliminar liga
 
 ### Equipos
-- `GET /api/v1/teams` - Obtener todos los equipos
-- `POST /api/v1/teams` - Crear nuevo equipo
-- `GET /api/v1/teams/:id` - Obtener equipo específico
-- `PUT /api/v1/teams/:id` - Actualizar equipo
-- `DELETE /api/v1/teams/:id` - Eliminar equipo
+- `GET /api/teams` - Obtener todos los equipos
+- `POST /api/teams` - Crear nuevo equipo
+- `GET /api/teams/:id` - Obtener equipo específico
+- `PUT /api/teams/:id` - Actualizar equipo
+- `DELETE /api/teams/:id` - Eliminar equipo
 
 ### Jugadores
-- `GET /api/v1/players` - Obtener todos los jugadores
-- `POST /api/v1/players` - Crear nuevo jugador
-- `GET /api/v1/players/:id` - Obtener jugador específico
-- `PUT /api/v1/players/:id` - Actualizar jugador
-- `DELETE /api/v1/players/:id` - Eliminar jugador
+- `GET /api/players` - Obtener todos los jugadores
+- `POST /api/players` - Crear nuevo jugador
+- `GET /api/players/:id` - Obtener jugador específico
+- `PUT /api/players/:id` - Actualizar jugador
+- `DELETE /api/players/:id` - Eliminar jugador
 
 ### Presidentes
-- `GET /api/v1/presidents` - Obtener todos los presidentes
-- `POST /api/v1/presidents` - Crear nuevo presidente
-- `GET /api/v1/presidents/:id` - Obtener presidente específico
-- `PUT /api/v1/presidents/:id` - Actualizar presidente
-- `DELETE /api/v1/presidents/:id` - Eliminar presidente
+- `GET /api/presidents` - Obtener todos los presidentes
+- `POST /api/presidents` - Crear nuevo presidente
+- `GET /api/presidents/:id` - Obtener presidente específico
+- `PUT /api/presidents/:id` - Actualizar presidente
+- `DELETE /api/presidents/:id` - Eliminar presidente
 
 ### Imágenes
-- `POST /api/v1/images/upload` - Subir imagen a Backblaze B2
-- `GET /api/v1/images/:id` - Obtener metadatos de imagen
-- `DELETE /api/v1/images/:id` - Eliminar imagen
+- `POST /api/images/upload` - Subir imagen a Backblaze B2
+- `GET /api/images/:id` - Obtener metadatos de imagen
+- `DELETE /api/images/:id` - Eliminar imagen
 
 ### Administración
-- `POST /api/v1/admin/scrape` - Ejecutar scraping de datos de ligas
+- `POST /api/admin/scrape` - Ejecutar scraping de datos de ligas
 
 
 ## Scripts Disponibles
@@ -322,7 +322,7 @@ El módulo de administración incluye funcionalidades de web scraping para extra
 El scraping se ejecuta mediante:
 
 ```bash
-POST /api/v1/admin/scrape
+POST /api/admin/scrape
 ```
 
 Los datos extraídos se procesan y almacenan automáticamente en la base de datos, manteniendo la integridad referencial entre entidades.
