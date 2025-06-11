@@ -12,5 +12,5 @@ export default registerAs('database', () => ({
   migrations: ['/src/migrations/*{.ts,.js}'],
   migrationsTableName: 'migrations',
   synchronize: false,
-  migrationsRun: false,
+  migrationsRun: true,
 }));
