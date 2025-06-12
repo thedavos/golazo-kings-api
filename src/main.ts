@@ -1,6 +1,10 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { ValidationPipe, VersioningType } from '@nestjs/common';
+import {
+  ValidationPipe,
+  VersioningType,
+  VERSION_NEUTRAL,
+} from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import {
@@ -51,7 +55,7 @@ async function bootstrap() {
   app.enableVersioning({
     type: VersioningType.HEADER,
     header: 'X-API-Version',
-    defaultVersion: [appConfig.defaultApiVersion, ''],
+    defaultVersion: VERSION_NEUTRAL,
   });
 
   app.useGlobalPipes(
