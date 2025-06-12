@@ -5,8 +5,9 @@ export const SUPPORTED_LEAGUES = {
   ['KINGS-LEAGUE-AMERICAS']: 'americas',
   ['KINGS-LEAGUE-ITALIA']: 'italia',
   ['KINGS-LEAGUE-BRASIL']: 'brazil',
-  ['KINGS-LEAGUE-FRANCE']: 'france',
-  ['KINGS-LEAGUE-GERMANY']: 'germany',
+  ['KINGS-LEAGUE-FRANCIA']: 'france',
+  ['KINGS-LEAGUE-ALEMANIA']: 'germany',
+  ['KINGS-LEAGUE-MENA']: 'mena',
   ['QUEENS-LEAGUE-AMERICAS']: 'americas',
   ['QUEENS-LEAGUE-SPAIN']: 'espana',
 };

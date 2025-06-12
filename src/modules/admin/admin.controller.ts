@@ -5,6 +5,8 @@ import {
   HttpStatus,
   Logger,
   Param,
+  ParseIntPipe,
+  Patch,
   Post,
   UseGuards,
 } from '@nestjs/common';
@@ -22,6 +24,7 @@ import { LeagueKeyPipe } from './pipes/league-key.pipe';
 import { ScrapedLeagueDto } from './domain/dtos/scraped-league.dto';
 import { CreateTeamDto } from '@modules/teams/dto/create-team.dto';
 import { UploadFromUrlDto } from '@modules/image/dtos/upload-image.dto';
+import { UpdateTeamDto } from '@modules/teams/dto/update-team.dto';
 import { Team } from '@modules/teams/domain/entities/team.entity';
 
 @ApiTags('admin')
@@ -148,5 +151,59 @@ export class AdminController {
     this.logger.log('Url uploaded successfully and attached to Team.');
 
     return team;
+  }
+
+  @Patch('scraping/update-team/:id')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Update team from scraping data',
+    description:
+      'Updates an existing team entity with scraped data if changes are detected',
+  })
+  async updateTeamByScraping(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateTeamDto: UpdateTeamDto,
+  ) {
+    this.logger.log(`Processing update for team ${id}`);
+
+    try {
+      const result = await this.teamsService.validateAndUpdate(
+        id,
+        updateTeamDto,
+      );
+
+      if (!result.hasChanges) {
+        this.logger.log(`No changes detected for team ${id}`);
+        return {
+          message: 'No changes detected',
+          team: result.team,
+        };
+      }
+
+      if (
+        updateTeamDto.logoUrl &&
+        updateTeamDto.logoUrl !== result.team.logoUrl
+      ) {
+        const uploadUrl: UploadFromUrlDto = {
+          entityId: result.team.id,
+          entityType: ImageEntities.TEAM,
+          filename: `${result.team.name}-logo-updated`,
+          imageUrl: updateTeamDto.logoUrl,
+        };
+
+        const imageUploaded =
+          await this.imageService.uploadImageFromUrl(uploadUrl);
+
+        return await this.teamsService.update(id, {
+          logoUrl: imageUploaded.url,
+        });
+      }
+
+      return result.team;
+    } catch (e) {
+      const error = e as Error;
+      this.logger.error(`Error updating team ${id}: ${error.message}`);
+      throw error;
+    }
   }
 }

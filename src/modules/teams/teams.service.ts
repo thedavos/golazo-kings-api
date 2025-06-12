@@ -56,4 +56,85 @@ export class TeamsService {
       throw new NotFoundException(`Team with ID ${id} not found`);
     }
   }
+
+  async validateAndUpdate(
+    id: number,
+    updateTeamDto: UpdateTeamDto,
+  ): Promise<{
+    hasChanges: boolean;
+    changedFields?: { field: string; oldValue: any; newValue: any }[];
+    team: Team;
+  }> {
+    const existingTeam = await this.findOne(id);
+
+    const changes = this.validateTeamChanges(existingTeam, updateTeamDto);
+
+    if (!changes.hasChanges) {
+      return {
+        hasChanges: false,
+        team: existingTeam,
+      };
+    }
+
+    const updatedTeam = await this.update(id, updateTeamDto);
+
+    return {
+      hasChanges: true,
+      changedFields: changes.changedFields,
+      team: updatedTeam,
+    };
+  }
+
+  private validateTeamChanges(
+    existingTeam: Team,
+    updateTeamDto: UpdateTeamDto,
+  ): {
+    hasChanges: boolean;
+    changedFields: { field: string; oldValue: any; newValue: any }[];
+  } {
+    const changedFields: { field: string; oldValue: any; newValue: any }[] = [];
+
+    const fieldsToCompare: (keyof UpdateTeamDto)[] = [
+      'name',
+      'slug',
+      'leagueId',
+      'city',
+      'country',
+      'abbr',
+      'logoUrl',
+      'foundationYear',
+      'venue',
+    ];
+
+    for (const field of fieldsToCompare) {
+      if (updateTeamDto[field] !== undefined) {
+        const existingValue = existingTeam[field];
+        const newValue = updateTeamDto[field];
+
+        // Comparación especial para strings (ignorando mayúsculas/minúsculas y espacios extras)
+        if (typeof existingValue === 'string' && typeof newValue === 'string') {
+          if (
+            existingValue.trim().toLowerCase() !== newValue.trim().toLowerCase()
+          ) {
+            changedFields.push({
+              field,
+              oldValue: existingValue,
+              newValue: newValue,
+            });
+          }
+        } else if (existingValue !== newValue) {
+          changedFields.push({
+            field,
+            oldValue: existingValue,
+            newValue: newValue,
+          });
+        }
+      }
+    }
+
+    return {
+      hasChanges: changedFields.length > 0,
+      changedFields,
+    };
+  }
 }
