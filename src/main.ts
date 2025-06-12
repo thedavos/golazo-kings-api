@@ -64,6 +64,13 @@ async function bootstrap() {
     origin: appConfig?.cors.origin,
     methods: appConfig?.cors.methods,
     credentials: appConfig?.cors.credentials,
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'X-API-Version',
+      'CF-Access-Client-Id',
+      'CF-Access-Client-Secret',
+    ],
   });
 
   await app.register(fastifyMultipart, {
