@@ -11,6 +11,7 @@ import {
   HttpCode,
   BadRequestException,
 } from '@nestjs/common';
+import { SlugValidationPipe } from '@common/pipes/slug-validation.pipe';
 import { TeamsService } from './teams.service';
 import { CreateTeamDto } from './dto/create-team.dto';
 import { UpdateTeamDto } from './dto/update-team.dto';
@@ -37,6 +38,11 @@ export class TeamsController {
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.teamsService.findOne(id);
+  }
+
+  @Get('slug/:slug')
+  findOneBySlug(@Param('slug', SlugValidationPipe) slug: string) {
+    return this.teamsService.findOneBySlug(slug);
   }
 
   @Patch(':id')
