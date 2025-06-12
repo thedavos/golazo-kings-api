@@ -1,6 +1,6 @@
-import { registerAs } from '@nestjs/config';
+import { ConfigType, registerAs } from '@nestjs/config';
 
-export default registerAs('swagger', () => ({
+const swaggerConfig = registerAs('swagger', () => ({
   enabled: process.env.SWAGGER_ENABLED === 'true',
   title: process.env.SWAGGER_TITLE || 'GolazoKings API',
   description:
@@ -8,3 +8,7 @@ export default registerAs('swagger', () => ({
   version: process.env.SWAGGER_VERSION || '1.0',
   path: process.env.SWAGGER_PATH || 'api/docs',
 }));
+
+export type SwaggerConfig = ConfigType<typeof swaggerConfig>;
+
+export default swaggerConfig;

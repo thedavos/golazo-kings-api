@@ -2,16 +2,16 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe, VersioningType } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
-import { ConfigService, ConfigType } from '@nestjs/config';
+import { ConfigService } from '@nestjs/config';
 import {
   FastifyAdapter,
   NestFastifyApplication,
 } from '@nestjs/platform-fastify';
-import appConfigType from '@config/app.config';
-import swaggerConfigType from '@config/swagger.config';
 import fastifyHelmet from '@fastify/helmet';
 import fastifyCors from '@fastify/cors';
 import fastifyMultipart from '@fastify/multipart';
+import type { SwaggerConfig } from '@config/swagger.config';
+import type { AppConfig } from '@config/app.config';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(
@@ -23,9 +23,11 @@ async function bootstrap() {
   );
   const configService = app.get(ConfigService);
 
-  const appConfig = configService.get<ConfigType<typeof appConfigType>>('app');
-  const swaggerConfig =
-    configService.get<ConfigType<typeof swaggerConfigType>>('swagger');
+  const appConfig = configService.get<AppConfig>('app') as AppConfig;
+
+  const swaggerConfig = configService.get<SwaggerConfig>(
+    'swagger',
+  ) as SwaggerConfig;
 
   await app.register(fastifyHelmet, {
     contentSecurityPolicy: {
@@ -44,12 +46,12 @@ async function bootstrap() {
     },
   });
 
-  app.setGlobalPrefix(appConfig?.apiPrefix as string);
+  app.setGlobalPrefix(appConfig.apiPrefix);
 
   app.enableVersioning({
     type: VersioningType.HEADER,
     header: 'X-API-Version',
-    defaultVersion: appConfig?.defaultApiVersion,
+    defaultVersion: appConfig.defaultApiVersion,
   });
 
   app.useGlobalPipes(
@@ -61,9 +63,9 @@ async function bootstrap() {
   );
 
   await app.register(fastifyCors, {
-    origin: appConfig?.cors.origin,
-    methods: appConfig?.cors.methods,
-    credentials: appConfig?.cors.credentials,
+    origin: appConfig.cors.origin,
+    methods: appConfig.cors.methods,
+    credentials: appConfig.cors.credentials,
     allowedHeaders: [
       'Content-Type',
       'Authorization',
@@ -79,7 +81,7 @@ async function bootstrap() {
     },
   });
 
-  if (swaggerConfig?.enabled) {
+  if (swaggerConfig.enabled) {
     const config = new DocumentBuilder()
       .setTitle(swaggerConfig.title)
       .addGlobalParameters({
@@ -98,7 +100,7 @@ async function bootstrap() {
     SwaggerModule.setup(swaggerConfig.path, app, documentFactory);
   }
 
-  await app.listen(appConfig?.port as number, '0.0.0.0');
+  await app.listen(appConfig.port, appConfig.host);
 }
 
 void bootstrap();

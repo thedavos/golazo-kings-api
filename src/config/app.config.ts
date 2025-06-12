@@ -1,6 +1,6 @@
-import { registerAs } from '@nestjs/config';
+import { ConfigType, registerAs } from '@nestjs/config';
 
-export default registerAs('app', () => ({
+const appConfigType = registerAs('app', () => ({
   nodeEnv: process.env.NODE_ENV || 'development',
   port: Number(process.env.PORT) || 3000,
   host: process.env.HOST || 'localhost',
@@ -24,3 +24,7 @@ export default registerAs('app', () => ({
     filePath: process.env.LOG_FILE_PATH || './logs/app.log',
   },
 }));
+
+export type AppConfig = ConfigType<typeof appConfigType>;
+
+export default appConfigType;
