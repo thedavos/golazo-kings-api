@@ -174,10 +174,7 @@ export class AdminController {
 
       if (!result.hasChanges) {
         this.logger.log(`No changes detected for team ${id}`);
-        return {
-          message: 'No changes detected',
-          team: result.team,
-        };
+        return result.team;
       }
 
       if (
