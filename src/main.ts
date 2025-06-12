@@ -51,7 +51,7 @@ async function bootstrap() {
   app.enableVersioning({
     type: VersioningType.HEADER,
     header: 'X-API-Version',
-    defaultVersion: appConfig.defaultApiVersion,
+    defaultVersion: [appConfig.defaultApiVersion, ''],
   });
 
   app.useGlobalPipes(

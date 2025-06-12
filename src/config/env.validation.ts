@@ -32,6 +32,7 @@ class EnvironmentVariables {
   HOST: string;
 
   @IsString()
+  @IsOptional()
   API_PREFIX: string;
 
   @IsString()

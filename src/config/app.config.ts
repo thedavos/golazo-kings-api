@@ -4,7 +4,7 @@ const appConfigType = registerAs('app', () => ({
   nodeEnv: process.env.NODE_ENV || 'development',
   port: Number(process.env.PORT) || 3000,
   host: process.env.HOST || 'localhost',
-  apiPrefix: process.env.API_PREFIX || 'api',
+  apiPrefix: process.env.API_PREFIX || '',
   apiVersion: process.env.API_VERSION || '1',
   defaultApiVersion: process.env.DEFAULT_API_VERSION || '1',
   cors: {
