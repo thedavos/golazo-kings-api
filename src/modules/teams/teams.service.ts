@@ -37,6 +37,19 @@ export class TeamsService {
     return team;
   }
 
+  async findOneBySlug(slug: string): Promise<Team> {
+    const team = await this.teamRepository.findOne({
+      where: { slug },
+      relations: ['league', 'players'],
+    });
+
+    if (!team) {
+      throw new NotFoundException(`Team with Slug ${slug} not found`);
+    }
+
+    return team;
+  }
+
   async update(id: number, updateTeamDto: UpdateTeamDto): Promise<Team> {
     const team = await this.teamRepository.preload({
       id: id,
@@ -58,14 +71,14 @@ export class TeamsService {
   }
 
   async validateAndUpdate(
-    id: number,
+    slug: string,
     updateTeamDto: UpdateTeamDto,
   ): Promise<{
     hasChanges: boolean;
     changedFields?: { field: string; oldValue: any; newValue: any }[];
     team: Team;
   }> {
-    const existingTeam = await this.findOne(id);
+    const existingTeam = await this.findOneBySlug(slug);
 
     const changes = this.validateTeamChanges(existingTeam, updateTeamDto);
 
@@ -76,7 +89,7 @@ export class TeamsService {
       };
     }
 
-    const updatedTeam = await this.update(id, updateTeamDto);
+    const updatedTeam = await this.update(existingTeam.id, updateTeamDto);
 
     return {
       hasChanges: true,

@@ -5,7 +5,6 @@ import {
   HttpStatus,
   Logger,
   Param,
-  ParseIntPipe,
   Patch,
   Post,
   UseGuards,
@@ -20,6 +19,7 @@ import {
   SupportedLeagueKey,
 } from './domain/value-objects/supported-leagues.enum';
 import { ImageEntities } from '@modules/image/domain/value-objects/image-entities.enum';
+import { SlugValidationPipe } from '@common/pipes/slug-validation.pipe';
 import { LeagueKeyPipe } from './pipes/league-key.pipe';
 import { ScrapedLeagueDto } from './domain/dtos/scraped-league.dto';
 import { CreateTeamDto } from '@modules/teams/dto/create-team.dto';
@@ -153,7 +153,7 @@ export class AdminController {
     return team;
   }
 
-  @Patch('scraping/update-team/:id')
+  @Patch('scraping/update-team/:slug')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Update team from scraping data',
@@ -161,19 +161,19 @@ export class AdminController {
       'Updates an existing team entity with scraped data if changes are detected',
   })
   async updateTeamByScraping(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('slug', SlugValidationPipe) slug: string,
     @Body() updateTeamDto: UpdateTeamDto,
   ) {
-    this.logger.log(`Processing update for team ${id}`);
+    this.logger.log(`Processing update for team ${slug}`);
 
     try {
       const result = await this.teamsService.validateAndUpdate(
-        id,
+        slug,
         updateTeamDto,
       );
 
       if (!result.hasChanges) {
-        this.logger.log(`No changes detected for team ${id}`);
+        this.logger.log(`No changes detected for team ${slug}`);
         return result.team;
       }
 
@@ -191,7 +191,7 @@ export class AdminController {
         const imageUploaded =
           await this.imageService.uploadImageFromUrl(uploadUrl);
 
-        return await this.teamsService.update(id, {
+        return await this.teamsService.update(result.team.id, {
           logoUrl: imageUploaded.url,
         });
       }
@@ -199,7 +199,7 @@ export class AdminController {
       return result.team;
     } catch (e) {
       const error = e as Error;
-      this.logger.error(`Error updating team ${id}: ${error.message}`);
+      this.logger.error(`Error updating team ${slug}: ${error.message}`);
       throw error;
     }
   }
