@@ -29,7 +29,16 @@ export default tseslint.config(
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-floating-promises': 'warn',
-      '@typescript-eslint/no-unsafe-argument': 'warn'
+      '@typescript-eslint/no-unsafe-argument': 'warn',
     },
+
+    overrides: [
+      {
+        files: ['**/filename-normalizer.util.ts'],
+        rules: {
+          'non-ascii-character': 'off',
+        },
+      },
+    ],
   },
 );

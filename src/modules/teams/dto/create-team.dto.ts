@@ -28,6 +28,11 @@ export class CreateTeamDto {
   @IsNotEmpty()
   leagueId: number;
 
+  @ApiProperty({ example: '32e73122-6496-4730-8979-81aef240fe35' })
+  @IsString()
+  @IsNotEmpty()
+  leagueUuid: string;
+
   @ApiProperty({ example: 'Barcelona' })
   @IsString()
   @MaxLength(255)

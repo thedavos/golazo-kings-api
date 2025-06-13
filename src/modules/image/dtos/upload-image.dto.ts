@@ -9,10 +9,11 @@ import {
   Min,
   IsObject,
 } from 'class-validator';
+import { Type } from 'class-transformer';
 import { Image } from '@modules/image/domain/entities/image.entity';
 import { ImageEntities } from '@modules/image/domain/value-objects/image-entities.enum';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
+import { NormalizeFilename } from '@common/decorators/normalize-filename.decorator';
 
 export class UploadImageDto {
   file: MultipartFile;
@@ -45,6 +46,7 @@ export class UploadFromUrlDto {
     example: 'team-image',
   })
   @IsOptional()
+  @NormalizeFilename()
   @IsString({ message: 'filename debe ser una cadena de texto' })
   filename?: string;
 

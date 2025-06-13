@@ -146,6 +146,7 @@ export class AdminController {
 
     const team = await this.teamsService.update(teamCreated.id, {
       logoUrl: imageUploaded.url,
+      uuid: teamCreated.uuid,
     });
 
     this.logger.log('Url uploaded successfully and attached to Team.');
@@ -192,6 +193,7 @@ export class AdminController {
           await this.imageService.uploadImageFromUrl(uploadUrl);
 
         return await this.teamsService.update(result.team.id, {
+          uuid: result.team.uuid,
           logoUrl: imageUploaded.url,
         });
       }
