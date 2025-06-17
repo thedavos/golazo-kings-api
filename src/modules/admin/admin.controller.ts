@@ -26,6 +26,7 @@ import { CreateTeamDto } from '@modules/teams/dto/create-team.dto';
 import { UploadFromUrlDto } from '@modules/image/dtos/upload-image.dto';
 import { UpdateTeamDto } from '@modules/teams/dto/update-team.dto';
 import { Team } from '@modules/teams/domain/entities/team.entity';
+import { normalizeFilename } from '@common/utils/filename-normalizer.util';
 
 @ApiTags('admin')
 @Controller('admin')
@@ -138,7 +139,7 @@ export class AdminController {
     const uploadUrl: UploadFromUrlDto = {
       entityId: teamCreated.id,
       entityType: ImageEntities.TEAM,
-      filename: `${teamCreated.name}-logo`,
+      filename: normalizeFilename(`${teamCreated.name}-logo`),
       imageUrl: createTeamDto.logoUrl as string,
     };
 
