@@ -66,6 +66,12 @@ class EnvironmentVariables {
   @IsBoolean()
   DB_LOGGING: boolean;
 
+  @IsString()
+  JWT_SECRET: string;
+
+  @IsString()
+  JWT_EXPIRATION: string;
+
   // CORS
   @IsString()
   @IsOptional()
@@ -152,6 +158,10 @@ export function validate(config: Record<string, unknown>) {
       DB_ROOT_PASSWORD: config.DB_ROOT_PASSWORD,
       DB_SYNCHRONIZE: config.DB_SYNCHRONIZE,
       DB_LOGGING: config.DB_LOGGING,
+
+      // JWT
+      JWT_SECRET: config.JWT_SECRET,
+      JWT_EXPIRATION: config.JWT_EXPIRATION,
 
       // CORS
       CORS_ORIGIN: config.CORS_ORIGIN,

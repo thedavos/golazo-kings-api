@@ -13,6 +13,9 @@ import { LeaguesService } from '@modules/leagues/leagues.service';
 import { CreateLeagueDto } from '@modules/leagues/dto/create-league.dto';
 import { UpdateLeagueDto } from '@modules/leagues/dto/update-league.dto';
 import { NotEmptyPipe } from '@common/pipes/not-empty.pipe';
+import { Public } from '@modules/auth/decorators/public.decorator';
+import { RequirePermissions } from '@modules/auth/decorators/permissions.decorator';
+import { Permission } from '@modules/auth/domain/enums/permission.enum';
 
 @ApiTags('leagues')
 @Controller('leagues')
@@ -20,11 +23,13 @@ export class LeaguesController {
   constructor(private readonly leaguesService: LeaguesService) {}
 
   @Post()
+  @RequirePermissions(Permission.CREATE_LEAGUE)
   @ApiOperation({ summary: 'Crear una nueva liga' })
   create(@Body() createLeagueDto: CreateLeagueDto) {
     return this.leaguesService.create(createLeagueDto);
   }
 
+  @Public()
   @Get()
   @ApiOperation({ summary: 'Obtener todas las ligas' })
   findAll() {

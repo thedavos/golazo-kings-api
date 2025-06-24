@@ -9,6 +9,7 @@ import {
   swaggerConfig,
   b2Config,
   adminConfig,
+  jwtConfig,
 } from '@/config';
 import { validate } from '@config/env.validation';
 import { ApiResponseModule } from '@common/response';
@@ -19,13 +20,21 @@ import { PlayersModule } from '@/modules/players/players.module';
 import { ImageModule } from '@/modules/image/image.module';
 import { AdminModule } from '@/modules/admin/admin.module';
 import { HealthModule } from '@modules/health/health.module';
+import { AuthModule } from '@modules/auth/auth.module';
 
 @Module({
   imports: [
     ApiResponseModule,
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [appConfig, databaseConfig, swaggerConfig, b2Config, adminConfig],
+      load: [
+        appConfig,
+        databaseConfig,
+        swaggerConfig,
+        b2Config,
+        adminConfig,
+        jwtConfig,
+      ],
       envFilePath:
         process.env.NODE_ENV === 'development'
           ? '.env.development'
@@ -40,6 +49,7 @@ import { HealthModule } from '@modules/health/health.module';
     PlayersModule,
     AdminModule,
     HealthModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
