@@ -11,14 +11,16 @@ import { Repository } from 'typeorm';
 import { User } from '@modules/auth/domain/entities/user.entity';
 import { Role } from '@modules/auth/domain/entities/role.entity';
 import { RoleService } from '@modules/auth/services/role.service';
+import { TokenService } from '@modules/auth/services/token.service';
 import { RegisterDto } from '@modules/auth/dto/register.dto';
 import { LoginDto } from '@modules/auth/dto/login.dto';
 import { Role as RoleEnum } from '@modules/auth/domain/enums/role.enum';
-import { Permission } from '@modules/auth/domain/enums/permission.enum';
 import { AuthResponseDto } from '@modules/auth/dto/auth-response.dto';
 import { UserResponseDto } from '@modules/auth/dto/user-response.dto';
 import { CreateUserDto } from '@modules/auth/dto/create-user.dto';
 import { UpdateUserDto } from '@modules/auth/dto/update-user.dto';
+import flattenPermissions from '@common/helpers/flattenPermissions';
+import { TokenResponse } from '@modules/auth/interfaces/jwt-payload.interface';
 
 @Injectable()
 export class AuthService {
@@ -27,6 +29,7 @@ export class AuthService {
     private readonly userRepository: Repository<User>,
     private readonly jwtService: JwtService,
     private readonly roleService: RoleService,
+    private readonly tokenService: TokenService,
   ) {}
 
   async createUser(createUserDto: CreateUserDto) {
@@ -124,23 +127,44 @@ export class AuthService {
     return this.generateAuthResponse(user);
   }
 
-  async login(loginDto: LoginDto) {
+  async login(loginDto: LoginDto, userAgent?: string, ipAddress?: string) {
     const user = await this.userRepository.findOne({
       where: { email: loginDto.email },
       relations: ['roles'],
     });
 
-    if (!user) {
+    if (!user || user.isBlocked) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
     const isPasswordValid = await compare(loginDto.password, user.password);
 
     if (!isPasswordValid) {
+      // Incrementar contador de intentos fallidos
+      user.failedLoginAttempts += 1;
+
+      // Bloquear cuenta después de 5 intentos fallidos
+      if (user.failedLoginAttempts >= 5) {
+        user.isBlocked = true;
+      }
+
+      await this.userRepository.save(user);
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    return this.generateAuthResponse(user);
+    user.failedLoginAttempts = 0;
+    user.lastLoginAt = new Date();
+
+    await this.userRepository.save(user);
+    return this.tokenService.generateTokens(user, userAgent, ipAddress);
+  }
+
+  async logout(refreshToken: string): Promise<void> {
+    await this.tokenService.revokeToken(refreshToken);
+  }
+
+  async refreshToken(refreshToken: string): Promise<TokenResponse> {
+    return this.tokenService.refreshAccessToken(refreshToken);
   }
 
   async getProfile(userId: number): Promise<UserResponseDto> {
@@ -157,7 +181,7 @@ export class AuthService {
       id: user.id,
       email: user.email,
       roles: user.roles.map((role) => role.name),
-      permissions: this.flattenPermissions(user.roles),
+      permissions: flattenPermissions(user.roles),
       managedTeamId: user.managedTeamId,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
@@ -169,7 +193,7 @@ export class AuthService {
       sub: user.id,
       email: user.email,
       roles: user.roles.map((role) => role.name),
-      permissions: this.flattenPermissions(user.roles),
+      permissions: flattenPermissions(user.roles),
     };
 
     return {
@@ -180,17 +204,5 @@ export class AuthService {
         roles: user.roles.map((role) => role.name),
       },
     };
-  }
-
-  private flattenPermissions(roles: Role[]): Permission[] {
-    const permissionsSet = new Set<Permission>();
-
-    roles.forEach((role) => {
-      role.permissions.forEach((permission) => {
-        permissionsSet.add(permission);
-      });
-    });
-
-    return Array.from(permissionsSet);
   }
 }

@@ -13,10 +13,12 @@ import { PermissionsGuard } from '@modules/auth/guards/permissions.guard';
 import { AuthController } from '@modules/auth/controllers/auth.controller';
 import { RoleController } from '@modules/auth/controllers/role.controller';
 import { UserController } from '@modules/auth/controllers/user.controller';
+import { TokenService } from '@modules/auth/services/token.service';
+import { RefreshToken } from '@modules/auth/domain/entities/refresh-token.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, Role]),
+    TypeOrmModule.forFeature([User, Role, RefreshToken]),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -32,6 +34,7 @@ import { UserController } from '@modules/auth/controllers/user.controller';
   providers: [
     AuthService,
     RoleService,
+    TokenService,
     JwtStrategy,
     {
       provide: APP_GUARD,
@@ -42,6 +45,6 @@ import { UserController } from '@modules/auth/controllers/user.controller';
       useClass: PermissionsGuard,
     },
   ],
-  exports: [AuthService, RoleService],
+  exports: [AuthService, RoleService, TokenService],
 })
 export class AuthModule {}

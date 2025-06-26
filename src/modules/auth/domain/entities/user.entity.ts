@@ -6,9 +6,11 @@ import {
   JoinTable,
   CreateDateColumn,
   UpdateDateColumn,
+  OneToMany,
 } from 'typeorm';
 import { Exclude } from 'class-transformer';
 import { Role } from './role.entity';
+import { RefreshToken } from '@modules/auth/domain/entities/refresh-token.entity';
 
 @Entity('users')
 export class User {
@@ -38,6 +40,18 @@ export class User {
 
   @Column({ nullable: true })
   managedTeamId?: number;
+
+  @OneToMany(() => RefreshToken, (token) => token.user)
+  refreshTokens: RefreshToken[];
+
+  @Column({ default: false })
+  isBlocked: boolean;
+
+  @Column({ nullable: true })
+  lastLoginAt: Date;
+
+  @Column({ default: 0 })
+  failedLoginAttempts: number;
 
   @CreateDateColumn()
   createdAt: Date;
