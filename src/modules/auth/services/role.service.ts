@@ -1,9 +1,11 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Role } from '@modules/auth/domain/entities/role.entity';
 import { Role as RoleEnum } from '@modules/auth/domain/enums/role.enum';
 import { Permission } from '@modules/auth/domain/enums/permission.enum';
+import { CreateRoleDto } from '@modules/auth/dto/create-role.dto';
+import { UpdateRoleDto } from '@modules/auth/dto/update-role.dto';
 
 @Injectable()
 export class RoleService implements OnModuleInit {
@@ -24,6 +26,44 @@ export class RoleService implements OnModuleInit {
 
   hasPermission(role: Role, permission: Permission): boolean {
     return role.permissions.includes(permission);
+  }
+
+  async create(createRoleDto: CreateRoleDto): Promise<Role> {
+    const existingRole = await this.roleRepository.findOne({
+      where: { name: createRoleDto.name },
+    });
+
+    if (existingRole) {
+      throw new Error('Role already exists');
+    }
+
+    const role = this.roleRepository.create(createRoleDto);
+    return this.roleRepository.save(role);
+  }
+
+  async findAll(): Promise<Role[]> {
+    return this.roleRepository.find();
+  }
+
+  async findById(id: number): Promise<Role> {
+    const role = await this.roleRepository.findOne({ where: { id } });
+
+    if (!role) {
+      throw new NotFoundException('Role not found');
+    }
+
+    return role;
+  }
+
+  async update(id: number, updateRoleDto: UpdateRoleDto): Promise<Role> {
+    const role = await this.findById(id);
+    Object.assign(role, updateRoleDto);
+    return this.roleRepository.save(role);
+  }
+
+  async remove(id: number): Promise<void> {
+    const role = await this.findById(id);
+    await this.roleRepository.remove(role);
   }
 
   private async initializeRoles() {

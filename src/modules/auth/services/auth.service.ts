@@ -17,6 +17,8 @@ import { Role as RoleEnum } from '@modules/auth/domain/enums/role.enum';
 import { Permission } from '@modules/auth/domain/enums/permission.enum';
 import { AuthResponseDto } from '@modules/auth/dto/auth-response.dto';
 import { UserResponseDto } from '@modules/auth/dto/user-response.dto';
+import { CreateUserDto } from '@modules/auth/dto/create-user.dto';
+import { UpdateUserDto } from '@modules/auth/dto/update-user.dto';
 
 @Injectable()
 export class AuthService {
@@ -26,6 +28,77 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly roleService: RoleService,
   ) {}
+
+  async createUser(createUserDto: CreateUserDto) {
+    const existingUser = await this.userRepository.findOne({
+      where: { email: createUserDto.email },
+    });
+
+    if (existingUser) {
+      throw new ConflictException('Email already exists');
+    }
+
+    const hashedPassword = await hash(createUserDto.password, 10);
+
+    const roles = (await Promise.all(
+      createUserDto.roles.map((roleName) =>
+        this.roleService.findByName(roleName),
+      ),
+    )) as Role[];
+
+    const user = this.userRepository.create({
+      ...createUserDto,
+      password: hashedPassword,
+      roles,
+    });
+
+    return this.userRepository.save(user);
+  }
+
+  async findAllUsers(): Promise<User[]> {
+    return this.userRepository.find({
+      relations: ['roles'],
+      select: ['id', 'email', 'managedTeamId', 'createdAt', 'updatedAt'],
+    });
+  }
+
+  async findUserById(id: number): Promise<User> {
+    const user = await this.userRepository.findOne({
+      where: { id },
+      relations: ['roles'],
+      select: ['id', 'email', 'managedTeamId', 'createdAt', 'updatedAt'],
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    return user;
+  }
+
+  async updateUser(id: number, updateUserDto: UpdateUserDto): Promise<User> {
+    const user = await this.findUserById(id);
+
+    if (updateUserDto.password) {
+      updateUserDto.password = await hash(updateUserDto.password, 10);
+    }
+
+    if (updateUserDto.roles) {
+      user.roles = (await Promise.all(
+        updateUserDto.roles.map((roleName) =>
+          this.roleService.findByName(roleName),
+        ),
+      )) as Role[];
+    }
+
+    Object.assign(user, updateUserDto);
+    return this.userRepository.save(user);
+  }
+
+  async removeUser(id: number): Promise<void> {
+    const user = await this.findUserById(id);
+    await this.userRepository.remove(user);
+  }
 
   async register(registerDto: RegisterDto) {
     const existingUser = await this.userRepository.findOne({
