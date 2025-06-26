@@ -27,6 +27,9 @@ import { UploadFromUrlDto } from '@modules/image/dtos/upload-image.dto';
 import { UpdateTeamDto } from '@modules/teams/dto/update-team.dto';
 import { Team } from '@modules/teams/domain/entities/team.entity';
 import { normalizeFilename } from '@common/utils/filename-normalizer.util';
+import { Public } from '@modules/auth/decorators/public.decorator';
+import { Permission } from '@modules/auth/domain/enums/permission.enum';
+import { RequirePermissions } from '@modules/auth/decorators/permissions.decorator';
 
 @ApiTags('admin')
 @Controller('admin')
@@ -40,6 +43,7 @@ export class AdminController {
     private readonly imageService: ImageService,
   ) {}
 
+  @Public()
   @Post('scraping/:league/teams')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -94,6 +98,9 @@ export class AdminController {
     }
   }
 
+  @RequirePermissions(Permission.CREATE_TEAM)
+  @Post('scraping/create-team')
+  @HttpCode(HttpStatus.CREATED)
   @ApiOperation({
     summary: 'Create team from scraping data',
     description: `
@@ -131,8 +138,6 @@ export class AdminController {
       },
     },
   })
-  @HttpCode(HttpStatus.CREATED)
-  @Post('scraping/create-team')
   async createTeamByScraping(@Body() createTeamDto: CreateTeamDto) {
     const teamCreated = await this.teamsService.create(createTeamDto);
 
