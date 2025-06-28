@@ -1,23 +1,19 @@
-import { Injectable, CanActivate } from '@nestjs/common';
+import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
 import { Observable } from 'rxjs';
+import { FastifyRequest } from 'fastify';
+import { Role } from '@modules/auth/domain/enums/role.enum';
 
 @Injectable()
 export class AdminGuard implements CanActivate {
-  canActivate(): boolean | Promise<boolean> | Observable<boolean> {
-    // const request = context.switchToHttp().getRequest();
-    // Asume que tienes la info del usuario en request (ej. desde un JwtAuthGuard global)
-    // const user = request.user;
+  canActivate(
+    context: ExecutionContext,
+  ): boolean | Promise<boolean> | Observable<boolean> {
+    const request = context.switchToHttp().getRequest<FastifyRequest>();
+    const user = request.user;
 
-    // --- IMPLEMENTA LÓGICA DE AUTORIZACIÓN AQUÍ ---
-    // Ejemplo: Verificar si el usuario tiene el rol 'admin'
-    // const isAdmin = user && user.roles && user.roles.includes('admin');
+    const isAdmin =
+      user && user.roles.some((role) => role.name.includes(Role.SUPER_ADMIN));
 
-    // if (!isAdmin) {
-    // Puedes lanzar una excepción o simplemente retornar false
-    // throw new ForbiddenException('Access denied. Admin privileges required.');
-    // return false;
-    // }
-    // console.log('AdminGuard: ', context.switchToHttp().getRequest());
-    return true;
+    return !isAdmin;
   }
 }

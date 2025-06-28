@@ -38,7 +38,7 @@ async function bootstrap() {
       directives: {
         defaultSrc: [`'self'`],
         styleSrc: [`'self'`, `'unsafe-inline'`],
-        imgSrc: [`'self'`, 'data:', 'https:'],
+        imgSrc: [`'self'`, 'data:', 'https:', 'validator.swagger.io'],
         scriptSrc: [`'self'`],
         ...(process.env.NODE_ENV === 'development'
           ? {

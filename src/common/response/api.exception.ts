@@ -25,26 +25,26 @@ export class ApiExceptionFilter implements ExceptionFilter {
 
     if (exception instanceof HttpException) {
       status = exception.getStatus();
+      title = this.getStandardTitle(status);
       const exceptionResponse = exception.getResponse();
 
       if (typeof exceptionResponse === 'string') {
-        title = exceptionResponse;
         detail = exceptionResponse;
       } else if (
         typeof exceptionResponse === 'object' &&
         exceptionResponse !== null
       ) {
         const resp = exceptionResponse as Record<string, any>;
-        title = (resp.error || resp.message || exception.message) as string;
-        detail = (resp.detail || resp.error || exception.message) as string;
+        detail = (resp.detail || exception.message || resp.error) as string;
 
         // Agregar información de validación si existe
         if (resp.errors && Array.isArray(resp.errors)) {
           extensions.errors = resp.errors;
-          detail = 'Validation failed';
+          detail = `Validation failed: ${resp.errors
+            .map((err: Error) => err.message || JSON.stringify(err))
+            .join(', ')}`;
         }
       } else {
-        title = exception.message;
         detail = exception.message;
       }
     } else if (exception instanceof Error) {
@@ -52,8 +52,8 @@ export class ApiExceptionFilter implements ExceptionFilter {
       title = 'Internal Server Error';
       detail =
         process.env.NODE_ENV === 'development'
-          ? exception.message
-          : 'An unexpected error occurred';
+          ? `Unexpected error: ${exception.message}`
+          : 'An unexpected error occurred while processing your request';
 
       // En desarrollo, agregar stack trace
       if (process.env.NODE_ENV === 'development') {
@@ -62,14 +62,18 @@ export class ApiExceptionFilter implements ExceptionFilter {
     } else {
       status = HttpStatus.INTERNAL_SERVER_ERROR;
       title = 'Internal Server Error';
-      detail = 'An unexpected error occurred';
+      detail = 'An unexpected error occurred while processing your request';
+    }
+
+    if (title === detail) {
+      detail = `${detail}. Please check your request and try again.`;
     }
 
     const errorResponse: ErrorResponseDto = {
       title,
       status,
       detail,
-      type: this.getProblemType(status),
+      type: this.getProblemType(status, request),
       instance: request.url,
       timestamp: new Date().toISOString(),
       path: request.url,
@@ -88,7 +92,52 @@ export class ApiExceptionFilter implements ExceptionFilter {
       .send(errorResponse);
   }
 
-  private getProblemType(status: number): string {
-    return `https://httpstatuses.com/${status}`;
+  private getStandardTitle(status: number): string {
+    const statusTitles: Record<number, string> = {
+      400: 'Bad Request',
+      401: 'Unauthorized',
+      403: 'Forbidden',
+      404: 'Not Found',
+      405: 'Method Not Allowed',
+      409: 'Conflict',
+      422: 'Unprocessable Entity',
+      429: 'Too Many Requests',
+      500: 'Internal Server Error',
+      502: 'Bad Gateway',
+      503: 'Service Unavailable',
+      504: 'Gateway Timeout',
+    };
+
+    return statusTitles[status] || `HTTP ${status}`;
+  }
+
+  private getProblemType(status: number, request: FastifyRequest): string {
+    const protocol =
+      request.headers['x-forwarded-proto'] || request.protocol
+        ? 'https'
+        : 'http';
+    const host =
+      (request.headers['x-forwarded-host'] as string) ||
+      request.headers.host ||
+      'localhost:3000';
+
+    const baseNamespace = `${protocol}://${host}/problems`;
+
+    const problemTypes: Record<number, string> = {
+      400: `${baseNamespace}/bad-request`,
+      401: `${baseNamespace}/authentication-required`,
+      403: `${baseNamespace}/access-denied`,
+      404: `${baseNamespace}/resource-not-found`,
+      405: `${baseNamespace}/method-not-allowed`,
+      409: `${baseNamespace}/resource-conflict`,
+      422: `${baseNamespace}/validation-failed`,
+      429: `${baseNamespace}/rate-limit-exceeded`,
+      500: `${baseNamespace}/internal-server-error`,
+      502: `${baseNamespace}/bad-gateway`,
+      503: `${baseNamespace}/service-unavailable`,
+      504: `${baseNamespace}/gateway-timeout`,
+    };
+
+    return problemTypes[status] || `${baseNamespace}/http-${status}`;
   }
 }

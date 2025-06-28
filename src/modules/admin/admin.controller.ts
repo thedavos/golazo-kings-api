@@ -27,7 +27,6 @@ import { UploadFromUrlDto } from '@modules/image/dtos/upload-image.dto';
 import { UpdateTeamDto } from '@modules/teams/dto/update-team.dto';
 import { Team } from '@modules/teams/domain/entities/team.entity';
 import { normalizeFilename } from '@common/utils/filename-normalizer.util';
-import { Public } from '@modules/auth/decorators/public.decorator';
 import { Permission } from '@modules/auth/domain/enums/permission.enum';
 import { RequirePermissions } from '@modules/auth/decorators/permissions.decorator';
 
@@ -43,7 +42,7 @@ export class AdminController {
     private readonly imageService: ImageService,
   ) {}
 
-  @Public()
+  @RequirePermissions(Permission.SCRAPE_TEAMS)
   @Post('scraping/:league/teams')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({

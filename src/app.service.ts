@@ -7,7 +7,6 @@ export class AppService {
 
   getWelcome() {
     const version = this.configService.get<string>('app.defaultApiVersion');
-    const apiPrefix = this.configService.get<string>('app.apiPrefix');
     const repoUrl = 'https://github.com/thedavos/golazo-kings-api';
 
     return {
@@ -15,25 +14,30 @@ export class AppService {
       version: version || '1',
       description:
         'API oficial de Golazo Kings para la gestión de datos de la Kings League',
-      prefix: apiPrefix || 'api',
-      endpoints: {
-        presidents: '/presidents',
-        players: '/players',
-        teams: '/teams',
-        leagues: '/leagues',
+      timestamp: new Date().toISOString(),
+      api: {
+        endpoints: {
+          presidents: '/presidents',
+          players: '/players',
+          teams: '/teams',
+          leagues: '/leagues',
+        },
+        documentation: '/docs',
+        healthCheck: '/health',
+        versionHeader: 'X-API-Version',
       },
-      docs: '/docs',
-      versionHeader: 'X-API-Version',
       links: {
         repository: repoUrl,
         issues: `${repoUrl}/issues`,
         newIssue: `${repoUrl}/issues/new`,
         contributing: `${repoUrl}/blob/main/CONTRIBUTING.md`,
         pullRequests: `${repoUrl}/pulls`,
+        license: `${repoUrl}/blob/main/LICENSE`,
       },
       contact: {
         author: 'David Vargas Dominguez',
         github: 'https://github.com/thedavos',
+        email: 'davidvargas.d45@gmail.com',
       },
     };
   }
