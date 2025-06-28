@@ -8,6 +8,7 @@ import {
 } from '@nestjs/terminus';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { S3HealthIndicator } from '@modules/health/indicators/s3.health';
+import { Public } from '@modules/auth/decorators/public.decorator';
 
 @ApiTags('Health')
 @Controller('health')
@@ -20,6 +21,7 @@ export class HealthController {
     private readonly s3: S3HealthIndicator,
   ) {}
 
+  @Public()
   @Get()
   @HealthCheck()
   @ApiOperation({ summary: 'Check API health status' })

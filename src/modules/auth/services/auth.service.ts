@@ -5,7 +5,6 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { JwtService } from '@nestjs/jwt';
 import { hash, compare } from 'bcrypt';
 import { Repository } from 'typeorm';
 import { User } from '@modules/auth/domain/entities/user.entity';
@@ -15,24 +14,22 @@ import { TokenService } from '@modules/auth/services/token.service';
 import { RegisterDto } from '@modules/auth/dto/register.dto';
 import { LoginDto } from '@modules/auth/dto/login.dto';
 import { Role as RoleEnum } from '@modules/auth/domain/enums/role.enum';
-import { AuthResponseDto } from '@modules/auth/dto/auth-response.dto';
 import { UserResponseDto } from '@modules/auth/dto/user-response.dto';
 import { CreateUserDto } from '@modules/auth/dto/create-user.dto';
 import { UpdateUserDto } from '@modules/auth/dto/update-user.dto';
 import flattenPermissions from '@common/helpers/flattenPermissions';
-import { TokenResponse } from '@modules/auth/interfaces/jwt-payload.interface';
+import { TokenResponseDto } from '@modules/auth/dto/token-response.dto';
 
 @Injectable()
 export class AuthService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
-    private readonly jwtService: JwtService,
     private readonly roleService: RoleService,
     private readonly tokenService: TokenService,
   ) {}
 
-  async createUser(createUserDto: CreateUserDto) {
+  async createUser(createUserDto: CreateUserDto): Promise<User> {
     const existingUser = await this.userRepository.findOne({
       where: { email: createUserDto.email },
     });
@@ -103,7 +100,7 @@ export class AuthService {
     await this.userRepository.remove(user);
   }
 
-  async register(registerDto: RegisterDto) {
+  async register(registerDto: RegisterDto): Promise<TokenResponseDto> {
     const existingUser = await this.userRepository.findOne({
       where: { email: registerDto.email },
     });
@@ -124,7 +121,7 @@ export class AuthService {
 
     await this.userRepository.save(user);
 
-    return this.generateAuthResponse(user);
+    return this.tokenService.generateTokens(user);
   }
 
   async login(loginDto: LoginDto, userAgent?: string, ipAddress?: string) {
@@ -155,15 +152,15 @@ export class AuthService {
     user.failedLoginAttempts = 0;
     user.lastLoginAt = new Date();
 
-    await this.userRepository.save(user);
-    return this.tokenService.generateTokens(user, userAgent, ipAddress);
+    const savedUser = await this.userRepository.save(user);
+    return this.tokenService.generateTokens(savedUser, userAgent, ipAddress);
   }
 
   async logout(refreshToken: string): Promise<void> {
     await this.tokenService.revokeToken(refreshToken);
   }
 
-  async refreshToken(refreshToken: string): Promise<TokenResponse> {
+  async refreshToken(refreshToken: string): Promise<TokenResponseDto> {
     return this.tokenService.refreshAccessToken(refreshToken);
   }
 
@@ -178,31 +175,9 @@ export class AuthService {
     }
 
     return {
-      id: user.id,
-      email: user.email,
+      user,
       roles: user.roles.map((role) => role.name),
       permissions: flattenPermissions(user.roles),
-      managedTeamId: user.managedTeamId,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
-    };
-  }
-
-  private generateAuthResponse(user: User): AuthResponseDto {
-    const payload = {
-      sub: user.id,
-      email: user.email,
-      roles: user.roles.map((role) => role.name),
-      permissions: flattenPermissions(user.roles),
-    };
-
-    return {
-      access_token: this.jwtService.sign(payload),
-      user: {
-        id: user.id,
-        email: user.email,
-        roles: user.roles.map((role) => role.name),
-      },
     };
   }
 }

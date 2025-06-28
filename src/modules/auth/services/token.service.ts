@@ -6,12 +6,10 @@ import { LessThan, Repository } from 'typeorm';
 import { RefreshToken } from '@modules/auth/domain/entities/refresh-token.entity';
 import { User } from '@modules/auth/domain/entities/user.entity';
 import flattenPermissions from '@common/helpers/flattenPermissions';
-import { parseTimeToMs } from '@common/utils/time.utils';
-import {
-  RefreshTokenPayload,
-  TokenResponse,
-} from '@modules/auth/interfaces/jwt-payload.interface';
 import areArraysEqual from '@common/utils/areArraysEqual.util';
+import { parseTimeToMs } from '@common/utils/time.utils';
+import { RefreshTokenPayload } from '@modules/auth/interfaces/jwt-payload.interface';
+import { TokenResponseDto } from '@modules/auth/dto/token-response.dto';
 
 @Injectable()
 export class TokenService {
@@ -26,7 +24,7 @@ export class TokenService {
     user: User,
     userAgent?: string,
     ipAddress?: string,
-  ): Promise<TokenResponse> {
+  ): Promise<TokenResponseDto> {
     const jwtExpiration = this.configService.get('jwt.expiresIn') as string;
     const refreshExpiration = this.configService.get(
       'jwt.refreshExpiresIn',
@@ -69,18 +67,14 @@ export class TokenService {
     await this.refreshTokenRepository.save(refreshTokenEntity);
 
     return {
-      user: {
-        email: user.email,
-        id: user.id,
-        roles: user.roles.map((role) => role.name),
-      },
+      user,
       accessToken,
       refreshToken,
       expiresIn: parseTimeToMs(jwtExpiration),
     };
   }
 
-  async refreshAccessToken(refreshToken: string): Promise<TokenResponse> {
+  async refreshAccessToken(refreshToken: string): Promise<TokenResponseDto> {
     const payload = await this.jwtService.verifyAsync<RefreshTokenPayload>(
       refreshToken,
       {

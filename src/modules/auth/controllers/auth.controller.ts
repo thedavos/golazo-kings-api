@@ -14,11 +14,12 @@ import {
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { RegisterDto } from '@modules/auth/dto/register.dto';
 import { LoginDto } from '@modules/auth/dto/login.dto';
-import { AuthResponseDto } from '@modules/auth/dto/auth-response.dto';
 import { Public } from '@modules/auth/decorators/public.decorator';
 import { CurrentUser } from '@modules/auth/decorators/current-user.decorator';
 import { RequestUser } from '@modules/auth/interfaces/request-user.interface';
 import { JwtAuthGuard } from '@modules/auth/guards/jwt-auth.guard';
+import { TokenResponseDto } from '@modules/auth/dto/token-response.dto';
+import { UserResponseDto } from '@modules/auth/dto/user-response.dto';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -27,7 +28,7 @@ export class AuthController {
 
   @Public()
   @Post('register')
-  async register(@Body() registerDto: RegisterDto): Promise<AuthResponseDto> {
+  async register(@Body() registerDto: RegisterDto): Promise<TokenResponseDto> {
     return this.authService.register(registerDto);
   }
 
@@ -41,7 +42,7 @@ export class AuthController {
     @Body() loginDto: LoginDto,
     @Headers('user-agent') userAgent: string,
     @Ip() ip: string,
-  ) {
+  ): Promise<TokenResponseDto> {
     return this.authService.login(loginDto, userAgent, ip);
   }
 
@@ -58,7 +59,9 @@ export class AuthController {
 
   @Post('refresh')
   @ApiOperation({ summary: 'Refresh access token' })
-  async refreshToken(@Body('refreshToken') refreshToken: string) {
+  async refreshToken(
+    @Body('refreshToken') refreshToken: string,
+  ): Promise<TokenResponseDto> {
     if (!refreshToken) {
       throw new UnauthorizedException('Refresh token is required');
     }
@@ -67,7 +70,7 @@ export class AuthController {
 
   @Get('profile')
   @UseGuards(JwtAuthGuard)
-  async getProfile(@CurrentUser() user: RequestUser) {
+  async getProfile(@CurrentUser() user: RequestUser): Promise<UserResponseDto> {
     return this.authService.getProfile(user.id);
   }
 }
