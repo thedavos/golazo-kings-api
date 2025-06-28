@@ -113,7 +113,8 @@ export class ApiExceptionFilter implements ExceptionFilter {
 
   private getProblemType(status: number, request: FastifyRequest): string {
     const protocol =
-      request.headers['x-forwarded-proto'] || request.protocol
+      request.headers['x-forwarded-proto'] ||
+      request.protocol.startsWith('https')
         ? 'https'
         : 'http';
     const host =
