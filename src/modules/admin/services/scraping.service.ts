@@ -154,6 +154,23 @@ export class ScrapingService {
             );
           });
 
+          const teamReferenceId = this.extractAttribute(
+            $element,
+            'a.h-full',
+            'href',
+          )
+            .map((value) => value.split('/').pop()?.split('-').shift())
+            .map((value) => (value ? parseInt(value) : value))
+            .toNullable();
+
+          const teamReferenceUrl = this.extractAttribute(
+            $element,
+            'a.h-full',
+            'href',
+          )
+            .map((value) => value.split('/').pop())
+            .toNullable();
+
           const teamLogo = this.extractAttribute(
             $element,
             '.container-logo-img img',
@@ -163,7 +180,13 @@ export class ScrapingService {
             .toNullable();
 
           teams.push(
-            new ScrapedTeamDto(teamName, leagueDto.leagueId, teamLogo),
+            new ScrapedTeamDto(
+              teamName,
+              leagueDto.leagueId,
+              teamLogo,
+              teamReferenceId as number,
+              teamReferenceUrl,
+            ),
           );
         } catch (innerError) {
           // Manejar errores durante la extracción de un solo equipo

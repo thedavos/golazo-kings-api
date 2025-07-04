@@ -53,16 +53,53 @@ export class ScrapedTeamDto {
   @IsInt()
   leagueId: number;
 
+  @ApiPropertyOptional({
+    description:
+      'Identificador de referencia al que pertenece el equipo de la web',
+    example: 11,
+    type: Number,
+    nullable: true,
+  })
+  @IsInt()
+  @IsOptional()
+  referenceId: number;
+
+  @ApiPropertyOptional({
+    description: 'URL de referencia al que pertenece el equipo de la web',
+    example: '11-aniquiladores-fc',
+    type: String,
+    nullable: true,
+  })
+  @IsString()
+  @IsOptional()
+  referenceUrl: string;
+
   /**
    * Constructor para crear una instancia de ScrapedTeamDto.
    * @param name - El nombre del equipo.
    * @param leagueId - El identificador de la liga
    * @param logo - La URL del logo del equipo.
+   * @param referenceId - Id de referencia a la web
+   * @param referenceUrl - Url de referencia de la web
    */
-  constructor(name: string, leagueId: number, logo: string | null) {
+  constructor(
+    name: string,
+    leagueId: number,
+    logo: string | null,
+    referenceId: number | null = null,
+    referenceUrl: string | null = null,
+  ) {
     this.name = name;
     this.leagueId = leagueId;
     this.logo = logo;
     this.slug = slugify(name);
+
+    if (referenceId) {
+      this.referenceId = referenceId;
+    }
+
+    if (referenceUrl) {
+      this.referenceUrl = referenceUrl;
+    }
   }
 }
