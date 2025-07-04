@@ -3,7 +3,6 @@ import { Reflector } from '@nestjs/core';
 import { FastifyRequest } from 'fastify';
 import { Permission } from '@modules/auth/domain/enums/permission.enum';
 import { PERMISSIONS_KEY } from '@modules/auth/decorators/permissions.decorator';
-import { RequestUser } from '@modules/auth/interfaces/request-user.interface';
 
 @Injectable()
 export class PermissionsGuard implements CanActivate {
@@ -19,12 +18,10 @@ export class PermissionsGuard implements CanActivate {
       return true;
     }
 
-    const { user } = context
-      .switchToHttp()
-      .getRequest<FastifyRequest & { user: RequestUser }>();
+    const { user } = context.switchToHttp().getRequest<FastifyRequest>();
 
     return requiredPermissions.every((permission) =>
-      user.permissions.includes(permission),
+      user?.permissions.includes(permission),
     );
   }
 }

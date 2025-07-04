@@ -1,7 +1,7 @@
-import { User } from '@modules/auth/domain/entities/user.entity';
+import { RequestUser } from '@modules/auth/interfaces/request-user.interface';
 
 declare module 'fastify' {
   interface FastifyRequest {
-    user?: User;
+    user?: RequestUser;
   }
 }
