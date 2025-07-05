@@ -43,6 +43,9 @@ export class Season {
   })
   status: SeasonStatus;
 
+  @Column({ type: 'boolean', default: false })
+  isCurrent: boolean;
+
   @Column()
   leagueId: number;
 
@@ -71,4 +74,37 @@ export class Season {
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  get isActive(): boolean {
+    return this.status === SeasonStatus.ONGOING;
+  }
+
+  get isFinished(): boolean {
+    return this.status === SeasonStatus.FINISHED;
+  }
+
+  get isPlanned(): boolean {
+    return this.status === SeasonStatus.PLANNED;
+  }
+
+  get daysUntilStart(): number {
+    const today = new Date();
+    const start = new Date(this.startDate);
+    const diffTime = start.getTime() - today.getTime();
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  }
+
+  get daysUntilEnd(): number {
+    const today = new Date();
+    const end = new Date(this.endDate);
+    const diffTime = end.getTime() - today.getTime();
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  }
+
+  get duration(): number {
+    const start = new Date(this.startDate);
+    const end = new Date(this.endDate);
+    const diffTime = end.getTime() - start.getTime();
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  }
 }

@@ -48,6 +48,12 @@ export class Team {
   @Column({ type: 'text', nullable: true })
   venue: string;
 
+  @Column({ type: 'int', nullable: true })
+  referenceId: number;
+
+  @Column({ type: 'varchar', length: 50, nullable: true })
+  referenceUrl: string;
+
   @Column()
   leagueId: number;
 

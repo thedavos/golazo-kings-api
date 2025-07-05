@@ -11,8 +11,11 @@ import {
   SupportedLeagueKey,
   getSupportedLeague,
 } from '@/modules/admin/domain/value-objects/supported-leagues.enum';
-import { ScrapedTeamDto } from '@/modules/admin/domain/dtos/scraped-team.dto';
-import { ScrapedLeagueDto } from '@modules/admin/domain/dtos/scraped-league.dto';
+import { ScrapedTeamDto } from '@/modules/admin/dtos/scraped-team.dto';
+import { ScrapedLeagueDto } from '@modules/admin/dtos/scraped-league.dto';
+import { ScrapedPlayerBodyDto } from '@modules/admin/dtos/scraped-player-body.dto';
+import { ScrapedPlayerDto } from '@modules/admin/dtos/scraped-player.dto';
+import { parsePlayerName } from '@modules/players/utils/parsePlayerName.util';
 
 @Injectable()
 export class ScrapingService {
@@ -38,6 +41,36 @@ export class ScrapingService {
     return league.includes('QUEENS')
       ? this.queensLeagueBaseUrl
       : this.kingsLeagueBaseUrl;
+  }
+
+  private getKingsPlayersUrl(
+    referenceTeamUrl: string,
+    isQueensLeague: boolean,
+    region?: string,
+    season?: string,
+    split?: number,
+  ) {
+    const url = isQueensLeague
+      ? this.queensLeagueBaseUrl
+      : this.kingsLeagueBaseUrl;
+
+    const urlSearchParams = new URLSearchParams(
+      `${url}/es/equipos/${referenceTeamUrl}`,
+    );
+
+    if (region) {
+      urlSearchParams.append('region', region);
+    }
+
+    if (season) {
+      urlSearchParams.append('season', season);
+    }
+
+    if (split) {
+      urlSearchParams.append('split', split.toString());
+    }
+
+    return urlSearchParams.toString();
   }
 
   private getKingsTeamsUrl(leagueSlug: SupportedLeagueKey) {
@@ -116,9 +149,122 @@ export class ScrapingService {
       `Scraping process completed for league: ${leagueSlug}. Result: ${teamDataResult.isSuccess ? 'Success' : 'Failure'}`,
     );
 
-    this.logger.log(teamDataResult.value);
-
     return teamDataResult;
+  }
+
+  async scrapePlayers(scrapedPlayerBody: ScrapedPlayerBodyDto) {
+    const kingsPlayersUrl = this.getKingsPlayersUrl(
+      scrapedPlayerBody.referenceTeamUrl,
+      scrapedPlayerBody.isQueensLeague,
+    );
+    const fetchResult = await this.fetchHtml(kingsPlayersUrl);
+
+    if (fetchResult.isFail) {
+      this.logger.error(
+        `Failed to fetch HTML for ${scrapedPlayerBody.referenceTeamUrl} url. Aborting processing.`,
+      );
+
+      return fetchResult;
+    }
+
+    const html = fetchResult.value;
+    const playersDataResult = this.extractPlayersData(html);
+
+    this.logger.log(
+      `Scraping process completed for players url: ${scrapedPlayerBody.referenceTeamUrl}. Result: ${playersDataResult.isSuccess ? 'Success' : 'Failure'}`,
+    );
+
+    return playersDataResult;
+  }
+
+  private extractPlayersData(html: string) {
+    this.logger.log('Processing HTML to extract players data.');
+    const players = [] as ScrapedPlayerDto[];
+
+    try {
+      const $ = cheerio.load(html);
+      const playersElements = $('.player-card-content');
+
+      if (playersElements.length === 0) {
+        this.logger.warn(
+          'No player elements found with the selector ".player-card-content".',
+        );
+
+        return success([]);
+      }
+
+      playersElements.each((index, element) => {
+        try {
+          const $element = $(element);
+
+          const playerName = this.extractContent(
+            $element,
+            '.player-name',
+          ).getOrThrow(() => {
+            this.logger.warn(
+              `Missing required data for team element at index ${index}. Skipping.`,
+            );
+
+            return new Error(
+              `Unable to extract team element at index ${index}.`,
+            );
+          });
+
+          const { firstName, lastName, nickname } = parsePlayerName(playerName);
+
+          const playerPosition = this.extractContent(
+            $element,
+            '.player-role',
+          ).getOrThrow(
+            () =>
+              new Error(`Unable to extract player position at index ${index}.`),
+          );
+
+          const isPlayerWildCard = this.extractAttribute(
+            $element,
+            '.player-category-only-icon',
+            'data-pd-tooltip',
+          )
+            .map((value) => !!value)
+            .getOrElse(false);
+
+          const scrapedPlayerDto = new ScrapedPlayerDto();
+          scrapedPlayerDto.name = playerName;
+          scrapedPlayerDto.firstName = firstName;
+          scrapedPlayerDto.lastName = lastName;
+          scrapedPlayerDto.position = playerPosition;
+          scrapedPlayerDto.isWildCard = isPlayerWildCard;
+
+          if (nickname) {
+            scrapedPlayerDto.nickname = nickname;
+          }
+
+          players.push(scrapedPlayerDto);
+        } catch (innerError) {
+          const err =
+            innerError instanceof Error
+              ? innerError
+              : new Error(
+                  `Unknown error processing player element at index ${index}: ${innerError}`,
+                );
+
+          this.logger.error(
+            `Error processing player element at index ${index}`,
+            err.stack,
+          );
+        }
+      });
+
+      this.logger.verbose(`Successfully extracted ${players.length} players.`);
+
+      return success(players);
+    } catch (e) {
+      const error =
+        e instanceof Error ? e : new Error(`Failed to process HTML: ${e}`);
+      this.logger.error(`Error during HTML processing`, error.stack);
+
+      return fail<null, Error>(error);
+    }
   }
 
   private extractTeamData(html: string, leagueDto: ScrapedLeagueDto) {

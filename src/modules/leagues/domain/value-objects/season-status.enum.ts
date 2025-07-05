@@ -3,4 +3,5 @@ export enum SeasonStatus {
   ONGOING = 'Ongoing',
   COMPLETED = 'Completed',
   CANCELLED = 'Cancelled',
+  FINISHED = 'Finished',
 }

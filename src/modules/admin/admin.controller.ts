@@ -21,7 +21,7 @@ import {
 import { ImageEntities } from '@modules/image/domain/value-objects/image-entities.enum';
 import { SlugValidationPipe } from '@common/pipes/slug-validation.pipe';
 import { LeagueKeyPipe } from './pipes/league-key.pipe';
-import { ScrapedLeagueDto } from './domain/dtos/scraped-league.dto';
+import { ScrapedLeagueDto } from '@modules/admin/dtos/scraped-league.dto';
 import { CreateTeamDto } from '@modules/teams/dto/create-team.dto';
 import { UploadFromUrlDto } from '@modules/image/dtos/upload-image.dto';
 import { UpdateTeamDto } from '@modules/teams/dto/update-team.dto';
@@ -29,6 +29,7 @@ import { Team } from '@modules/teams/domain/entities/team.entity';
 import { normalizeFilename } from '@common/utils/filename-normalizer.util';
 import { Permission } from '@modules/auth/domain/enums/permission.enum';
 import { RequirePermissions } from '@modules/auth/decorators/permissions.decorator';
+import { ScrapedPlayerBodyDto } from '@modules/admin/dtos/scraped-player-body.dto';
 
 @ApiTags('admin')
 @Controller('admin')
@@ -95,6 +96,55 @@ export class AdminController {
         error?.stack,
       );
     }
+  }
+
+  @RequirePermissions(Permission.SCRAPE_PLAYERS)
+  @Post('scraping/players')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Scrape Kings League players for a specific team',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Scraping and saving process finished.',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Bad Request (Invalid or unsupported scraped player body).',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden. Admin privileges required.',
+  })
+  @ApiResponse({
+    status: 500,
+    description: 'Internal server error during scraping or saving process.',
+  })
+  async scrapeKingsLeaguePlayers(
+    @Body() scrapedPlayerBody: ScrapedPlayerBodyDto,
+  ) {
+    this.logger.log(
+      `Admin request received to scrape players given a url: ${scrapedPlayerBody.referenceTeamUrl}`,
+    );
+
+    const result = await this.scrapingService.scrapePlayers(scrapedPlayerBody);
+
+    if (result.isSuccess) {
+      const summary = result.value;
+      this.logger.log(
+        `Scrape successful for players: ${JSON.stringify(summary)}`,
+      );
+
+      return summary;
+    } else {
+      const error = result.error;
+      this.logger.error(
+        `Scrape failed for players url ${scrapedPlayerBody.referenceTeamUrl}: ${error?.message}`,
+        error?.stack,
+      );
+    }
+
+    return result;
   }
 
   @RequirePermissions(Permission.CREATE_TEAM)
