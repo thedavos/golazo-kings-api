@@ -6,6 +6,7 @@ import {
   IsOptional,
   MaxLength,
   IsUrl,
+  IsInt,
 } from 'class-validator';
 
 /**
@@ -98,12 +99,12 @@ export class ScrapedPlayerDto {
     type: String,
     required: false,
   })
-  @IsString({ message: 'El número de camiseta debe ser un texto válido' })
+  @IsInt({ message: 'El número de camiseta debe ser un número válido' })
   @IsOptional()
   @MaxLength(3, {
     message: 'El número de camiseta no puede exceder los 3 caracteres',
   })
-  jerseyNumber: string;
+  jerseyNumber: number;
 
   @ApiProperty({
     description:
@@ -126,4 +127,24 @@ export class ScrapedPlayerDto {
   @IsUrl()
   @IsOptional()
   imageUrl: string;
+
+  @ApiProperty({
+    description: 'Identificador del jugador en la fuente externa',
+    example: 1,
+    type: Number,
+    required: false,
+  })
+  @IsInt({ message: 'El id de referencia debe ser un número entero' })
+  @IsOptional()
+  referenceId: number;
+
+  @ApiProperty({
+    description: 'URL de referencia del jugador en la fuente externa',
+    example: '10-christian-ubon',
+    maxLength: 500,
+    required: false,
+  })
+  @IsString({ message: 'La referencia debe ser una cadena de texto' })
+  @IsOptional()
+  referenceUrl: string;
 }

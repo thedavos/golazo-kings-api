@@ -4,7 +4,6 @@ import {
   IsPositive,
   IsOptional,
   IsString,
-  IsUrl,
   Max,
   Min,
   IsBoolean,
@@ -77,16 +76,6 @@ export class ScrapedPlayerBodyDto {
     maxLength: 500,
   })
   @IsString({ message: 'La URL de referencia debe ser una cadena de texto' })
-  @IsUrl(
-    {
-      protocols: ['http', 'https'],
-      require_protocol: true,
-    },
-    {
-      message:
-        'La URL de referencia debe ser una URL válida con protocolo HTTP o HTTPS',
-    },
-  )
   referenceTeamUrl: string;
 
   @ApiProperty({
