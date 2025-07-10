@@ -23,6 +23,7 @@ import { RequestUser } from '@modules/auth/interfaces/request-user.interface';
 import { JwtAuthGuard } from '@modules/auth/guards/jwt-auth.guard';
 import { TokenResponseDto } from '@modules/auth/dto/token-response.dto';
 import { UserResponseDto } from '@modules/auth/dto/user-response.dto';
+import { UpdatePasswordDto } from '@modules/admin/dtos/update-password.dto';
 import { AuthService } from '@modules/auth/services/auth.service';
 import { AppConfig } from '@config/app.config';
 
@@ -101,6 +102,33 @@ export class AuthController {
     this.setAuthCookies(reply, result.accessToken, result.refreshToken);
 
     return result;
+  }
+
+  @Post('update-password')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Update user password' })
+  @ApiResponse({ status: 200, description: 'Password updated successfully' })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized or invalid current password',
+  })
+  async updatePassword(
+    @CurrentUser() user: RequestUser,
+    @Body() updatePasswordDto: UpdatePasswordDto,
+  ): Promise<{ message: string }> {
+    if (updatePasswordDto.newPassword !== updatePasswordDto.confirmPassword) {
+      throw new UnauthorizedException(
+        'New password and confirmation do not match',
+      );
+    }
+
+    await this.authService.updatePassword(
+      user.id,
+      updatePasswordDto.currentPassword,
+      updatePasswordDto.newPassword,
+    );
+
+    return { message: 'Password updated successfully' };
   }
 
   @Get('profile')

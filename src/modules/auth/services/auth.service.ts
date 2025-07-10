@@ -5,7 +5,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { hash, compare } from 'bcrypt';
+import { compare, hash } from 'bcrypt';
 import { Repository } from 'typeorm';
 import { User } from '@modules/auth/domain/entities/user.entity';
 import { Role } from '@modules/auth/domain/entities/role.entity';
@@ -162,6 +162,29 @@ export class AuthService {
 
   async refreshToken(refreshToken: string): Promise<TokenResponseDto> {
     return this.tokenService.refreshAccessToken(refreshToken);
+  }
+
+  async updatePassword(
+    userId: number,
+    currentPassword: string,
+    newPassword: string,
+  ): Promise<void> {
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const isPasswordValid = await compare(currentPassword, user.password);
+
+    if (!isPasswordValid) {
+      throw new UnauthorizedException('Current password is incorrect');
+    }
+
+    user.password = await hash(newPassword, 10);
+    await this.userRepository.save(user);
   }
 
   async getProfile(userId: number): Promise<UserResponseDto> {
