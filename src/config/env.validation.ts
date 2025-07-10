@@ -72,6 +72,9 @@ class EnvironmentVariables {
   @IsString()
   JWT_EXPIRATION: string;
 
+  @IsString()
+  COOKIE_SECRET: string;
+
   // CORS
   @IsString()
   @IsOptional()
@@ -162,6 +165,9 @@ export function validate(config: Record<string, unknown>) {
       // JWT
       JWT_SECRET: config.JWT_SECRET,
       JWT_EXPIRATION: config.JWT_EXPIRATION,
+
+      // COOKIE
+      COOKIE_SECRET: config.COOKIE_SECRET,
 
       // CORS
       CORS_ORIGIN: config.CORS_ORIGIN,

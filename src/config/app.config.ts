@@ -7,6 +7,7 @@ const appConfigType = registerAs('app', () => ({
   apiPrefix: process.env.API_PREFIX || '',
   apiVersion: process.env.API_VERSION || '1',
   defaultApiVersion: process.env.DEFAULT_API_VERSION || '1',
+  cookieSecret: process.env.COOKIE_SECRET || 'secret',
   cors: {
     origin: process.env.CORS_ORIGIN?.split(',') || ['http://localhost:3000'],
     methods: process.env.CORS_METHODS?.split(',') || [

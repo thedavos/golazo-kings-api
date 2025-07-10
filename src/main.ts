@@ -14,6 +14,7 @@ import {
 import fastifyHelmet from '@fastify/helmet';
 import fastifyCors from '@fastify/cors';
 import fastifyMultipart from '@fastify/multipart';
+import fastifyCookie from '@fastify/cookie';
 import type { SwaggerConfig } from '@config/swagger.config';
 import type { AppConfig } from '@config/app.config';
 
@@ -48,6 +49,10 @@ async function bootstrap() {
           : {}),
       },
     },
+  });
+
+  await app.register(fastifyCookie, {
+    secret: appConfig.cookieSecret,
   });
 
   app.setGlobalPrefix(appConfig.apiPrefix);
