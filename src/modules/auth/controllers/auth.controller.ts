@@ -39,7 +39,7 @@ export class AuthController {
   @Post('register')
   async register(
     @Body() registerDto: RegisterDto,
-    @Res() reply: FastifyReply,
+    @Res({ passthrough: true }) reply: FastifyReply,
   ): Promise<TokenResponseDto> {
     const result = await this.authService.register(registerDto);
 
@@ -58,7 +58,7 @@ export class AuthController {
     @Body() loginDto: LoginDto,
     @Headers('user-agent') userAgent: string,
     @Ip() ip: string,
-    @Res() reply: FastifyReply,
+    @Res({ passthrough: true }) reply: FastifyReply,
   ): Promise<TokenResponseDto> {
     const response = await this.authService.login(loginDto, userAgent, ip);
 
@@ -71,7 +71,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Logout user' })
   async logout(
     @Body('refreshToken') refreshToken: string,
-    @Res() reply: FastifyReply,
+    @Res({ passthrough: true }) reply: FastifyReply,
   ) {
     if (!refreshToken) {
       throw new UnauthorizedException('Refresh token is required');
@@ -88,7 +88,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Refresh access token' })
   async refreshToken(
     @Req() request: FastifyRequest,
-    @Res() reply: FastifyReply,
+    @Res({ passthrough: true }) reply: FastifyReply,
   ): Promise<TokenResponseDto> {
     const token = request.cookies.refreshToken;
 
