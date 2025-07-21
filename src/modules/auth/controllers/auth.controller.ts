@@ -84,6 +84,7 @@ export class AuthController {
     return { message: 'Logout successful' };
   }
 
+  @Public()
   @Post('refresh')
   @ApiOperation({ summary: 'Refresh access token' })
   async refreshToken(
