@@ -117,6 +117,8 @@ export class TeamsService {
       'logoUrl',
       'foundationYear',
       'venue',
+      'referenceId',
+      'referenceUrl',
     ];
 
     for (const field of fieldsToCompare) {

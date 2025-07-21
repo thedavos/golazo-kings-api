@@ -71,4 +71,18 @@ export class CreateTeamDto {
   @IsString()
   @IsOptional()
   venue?: string;
+
+  @ApiPropertyOptional({
+    example: 10,
+  })
+  @IsInt()
+  @IsOptional()
+  referenceId: number;
+
+  @ApiPropertyOptional({
+    example: '10-pio-fc',
+  })
+  @IsString()
+  @IsOptional()
+  referenceUrl: string;
 }
