@@ -7,7 +7,10 @@ import {
   MaxLength,
   IsUrl,
   IsInt,
+  MinLength,
 } from 'class-validator';
+import { randomUUID } from 'crypto';
+import slugify from '@common/utils/slugify.utils';
 
 /**
  * DTO para representar datos de jugadores extraídos mediante web scraping
@@ -53,6 +56,16 @@ export class ScrapedPlayerDto {
     message: 'El apellido no puede exceder los 200 caracteres',
   })
   lastName: string;
+
+  @ApiProperty({
+    description:
+      'Slug auto-generado a partir de los nombres del jugador o jugadora con hash único',
+    example: 'mar-serracanta-a1b2c3d4',
+  })
+  @IsString()
+  @MinLength(2)
+  @MaxLength(50)
+  slug: string;
 
   @ApiProperty({
     description:
@@ -147,4 +160,15 @@ export class ScrapedPlayerDto {
   @IsString({ message: 'La referencia debe ser una cadena de texto' })
   @IsOptional()
   referenceUrl: string;
+
+  constructor() {
+    if (this.firstName && this.lastName) {
+      this.setUniqueSlug();
+    }
+  }
+
+  setUniqueSlug() {
+    const uniqueId = randomUUID().substring(0, 8);
+    this.slug = `${slugify(`${this.firstName} ${this.lastName}`)}-${uniqueId}`;
+  }
 }

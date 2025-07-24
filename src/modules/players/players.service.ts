@@ -37,6 +37,19 @@ export class PlayersService {
     return player;
   }
 
+  async findBySlug(slug: string): Promise<Player> {
+    const player = await this.playerRepository.findOne({
+      where: { slug },
+      relations: ['team'],
+    });
+
+    if (!player) {
+      throw new NotFoundException(`Player with Slug ${slug} not found`);
+    }
+
+    return player;
+  }
+
   async update(id: number, updatePlayerDto: UpdatePlayerDto): Promise<Player> {
     const player = await this.playerRepository.preload({
       id: id,

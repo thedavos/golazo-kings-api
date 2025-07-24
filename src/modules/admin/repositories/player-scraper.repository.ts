@@ -101,6 +101,7 @@ export class PlayerScraperRepository extends BaseScraperRepository {
           if (playerNumber) scrapedPlayerDto.jerseyNumber = playerNumber;
           if (playerImageUrl) scrapedPlayerDto.imageUrl = playerImageUrl;
           if (nickname) scrapedPlayerDto.nickname = nickname;
+          scrapedPlayerDto.setUniqueSlug();
 
           players.push(scrapedPlayerDto);
         } catch (innerError) {

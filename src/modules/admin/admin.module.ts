@@ -6,10 +6,11 @@ import { PlayerScraperRepository } from '@modules/admin/repositories/player-scra
 import { TeamScraperRepository } from '@modules/admin/repositories/team-scraper.repository';
 import { TeamsModule } from '@/modules/teams/teams.module';
 import { ImageModule } from '@modules/image/image.module';
+import { PlayersModule } from '@modules/players/players.module';
 import { AdminController } from './admin.controller';
 
 @Module({
-  imports: [TeamsModule, ImageModule, HttpModule],
+  imports: [TeamsModule, PlayersModule, ImageModule, HttpModule],
   controllers: [AdminController],
   providers: [
     ScrapingService,

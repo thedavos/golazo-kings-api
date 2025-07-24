@@ -30,6 +30,8 @@ import { ImageEntities } from '@/modules/image/domain/value-objects/image-entiti
 import { Image } from '@/modules/image/domain/entities/image.entity';
 import { Player } from './domain/entities/player.entity';
 import { MultipartFile } from '@fastify/multipart';
+import { SlugValidationPipe } from '@common/pipes/slug-validation.pipe';
+import { Public } from '@modules/auth/decorators/public.decorator';
 
 @ApiTags('Players')
 @Controller('players') // Ruta base: /players
@@ -52,6 +54,7 @@ export class PlayersController {
     return this.playersService.create(createPlayerDto);
   }
 
+  @Public()
   @Get()
   @ApiOperation({ summary: 'Obtener una lista de todos los jugadores' })
   @ApiResponse({
@@ -67,6 +70,7 @@ export class PlayersController {
     return this.playersService.findAll(teamIdNum);
   }
 
+  @Public()
   @Get(':id')
   @ApiOperation({ summary: 'Obtener un jugador por su ID' })
   @ApiParam({ name: 'id', description: 'ID del jugador', type: Number })
@@ -77,6 +81,19 @@ export class PlayersController {
   })
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.playersService.findOne(id);
+  }
+
+  @Public()
+  @Get('slug/:slug')
+  @ApiOperation({ summary: 'Obtener un jugador por su slug' })
+  @ApiParam({ name: 'id', description: 'Slug del jugador', type: String })
+  @ApiResponse({
+    status: 200,
+    description: 'Detalles del jugador.',
+    type: Player,
+  })
+  findOneBySlug(@Param('slug', SlugValidationPipe) slug: string) {
+    return this.playersService.findBySlug(slug);
   }
 
   @Patch(':id')

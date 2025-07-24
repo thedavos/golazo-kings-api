@@ -26,10 +26,13 @@ import { CreateTeamDto } from '@modules/teams/dto/create-team.dto';
 import { UploadFromUrlDto } from '@modules/image/dtos/upload-image.dto';
 import { UpdateTeamDto } from '@modules/teams/dto/update-team.dto';
 import { Team } from '@modules/teams/domain/entities/team.entity';
+import { Player } from '@modules/players/domain/entities/player.entity';
 import { normalizeFilename } from '@common/utils/filename-normalizer.util';
 import { Permission } from '@modules/auth/domain/enums/permission.enum';
 import { RequirePermissions } from '@modules/auth/decorators/permissions.decorator';
 import { ScrapedPlayerBodyDto } from '@modules/admin/dtos/scraped-player-body.dto';
+import { CreatePlayerDto } from '@modules/players/dto/create-player.dto';
+import { PlayersService } from '@modules/players/players.service';
 
 @ApiTags('admin')
 @Controller('admin')
@@ -41,6 +44,7 @@ export class AdminController {
     private readonly scrapingService: ScrapingService,
     private readonly teamsService: TeamsService,
     private readonly imageService: ImageService,
+    private readonly playersService: PlayersService,
   ) {}
 
   @RequirePermissions(Permission.SCRAPE_TEAMS)
@@ -199,14 +203,60 @@ export class AdminController {
 
     const imageUploaded = await this.imageService.uploadImageFromUrl(uploadUrl);
 
-    const team = await this.teamsService.update(teamCreated.id, {
+    const teamUpdated = await this.teamsService.update(teamCreated.id, {
       logoUrl: imageUploaded.url,
       uuid: teamCreated.uuid,
     });
 
     this.logger.log('Url uploaded successfully and attached to Team.');
 
-    return team;
+    return teamUpdated;
+  }
+
+  @RequirePermissions(Permission.CREATE_PLAYER)
+  @Post('scraping/create-player')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({
+    summary: 'Create player from scraping data',
+    description: `
+    Creates a new player entity from scraped data and manages the associated logo image upload process.
+    This endpoint performs a complete workflow that includes:
+    1. Player creation from scraping data
+    2. Profile image download from external URL
+    3. Image upload to CDN/storage service
+    4. Player entity update with new logo URL
+    
+    **Note:** This is an admin-only endpoint used for bulk player creation from web scraping operations.
+  `,
+    operationId: 'createPlayerByScraping',
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Player created successfully with profile image uploaded',
+    type: Player,
+  })
+  async createPlayerByScraping(@Body() createPlayerDto: CreatePlayerDto) {
+    const playerCreated = await this.playersService.create(createPlayerDto);
+    this.logger.log('Player created successfully.');
+
+    const uploadUrl: UploadFromUrlDto = {
+      entityId: playerCreated.id,
+      entityType: ImageEntities.PLAYER,
+      filename: normalizeFilename(`${playerCreated.slug}-profile-image`),
+      imageUrl: createPlayerDto.profileImageUrl as string,
+    };
+
+    const imageUploaded = await this.imageService.uploadImageFromUrl(uploadUrl);
+    this.logger.log('Url uploaded successfully and attached to Player.');
+
+    const playerUpdated = await this.playersService.update(playerCreated.id, {
+      profileImageUrl: imageUploaded.url,
+      uuid: playerCreated.uuid,
+    });
+
+    this.logger.log('Player updated successfully.');
+
+    return playerUpdated;
   }
 
   @Patch('scraping/update-team/:slug')

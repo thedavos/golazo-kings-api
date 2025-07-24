@@ -9,11 +9,15 @@ import {
   Min,
   Max,
   IsUrl,
+  MinLength,
+  IsUUID,
+  IsBoolean,
 } from 'class-validator';
 import {
   PlayerPosition,
   PlayerPositionAbbreviation,
 } from '@/modules/players/domain/value-objects/player-position.enum';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreatePlayerDto {
   @IsString()
@@ -25,6 +29,12 @@ export class CreatePlayerDto {
   @IsNotEmpty()
   @MaxLength(100)
   lastName: string;
+
+  @ApiProperty({ example: 'mar-serracanta' })
+  @IsString()
+  @MinLength(2)
+  @MaxLength(50)
+  slug: string;
 
   @IsEnum(PlayerPosition)
   @IsOptional()
@@ -51,9 +61,35 @@ export class CreatePlayerDto {
 
   @IsUrl()
   @IsOptional()
-  imageUrl?: string;
+  profileImageUrl?: string;
 
   @IsInt()
   @IsNotEmpty()
-  teamId: number; // ID del equipo al que pertenece
+  teamId: number;
+
+  @ApiProperty({ example: '32e73122-6496-4730-8979-81aef240fe35' })
+  @IsUUID()
+  @IsNotEmpty()
+  teamUuid: string;
+
+  @ApiPropertyOptional({
+    example: 350,
+  })
+  @IsInt()
+  @IsOptional()
+  referenceId: number;
+
+  @ApiPropertyOptional({
+    example: '350-antonela-romoleroux',
+  })
+  @IsString()
+  @IsOptional()
+  referenceUrl: string;
+
+  @ApiPropertyOptional({
+    example: true,
+  })
+  @IsBoolean()
+  @IsOptional()
+  isQueensLeaguePlayer: boolean;
 }

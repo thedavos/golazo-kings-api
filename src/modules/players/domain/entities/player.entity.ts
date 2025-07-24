@@ -88,6 +88,9 @@ export class Player {
   @Column({ type: 'boolean', default: false })
   isWildCard: boolean;
 
+  @Column({ type: 'boolean', default: false })
+  isQueensLeaguePlayer: boolean;
+
   @Column({
     type: 'enum',
     enum: PlayerWildcardType,
