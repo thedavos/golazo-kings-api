@@ -54,6 +54,9 @@ export class Team {
   @Column({ type: 'varchar', length: 50, nullable: true })
   referenceUrl: string;
 
+  @Column({ type: 'boolean', default: false })
+  isQueensLeagueTeam: boolean;
+
   @Column()
   leagueId: number;
 

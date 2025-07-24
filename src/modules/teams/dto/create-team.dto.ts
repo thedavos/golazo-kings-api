@@ -7,6 +7,7 @@ import {
   MaxLength,
   Min,
   MinLength,
+  IsBoolean,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
@@ -85,4 +86,11 @@ export class CreateTeamDto {
   @IsString()
   @IsOptional()
   referenceUrl: string;
+
+  @ApiPropertyOptional({
+    example: true,
+  })
+  @IsBoolean()
+  @IsOptional()
+  isQueensLeagueTeam: boolean;
 }
