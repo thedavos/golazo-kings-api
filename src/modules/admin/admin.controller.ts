@@ -7,10 +7,10 @@ import {
   Param,
   Patch,
   Post,
-  UseGuards,
+  // UseGuards,
 } from '@nestjs/common';
 import { ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { AdminGuard } from './guards/admin.guard';
+// import { AdminGuard } from './guards/admin.guard';
 import { ScrapingService } from './services/scraping.service';
 import { TeamsService } from '@modules/teams/teams.service';
 import { ImageService } from '@modules/image/services/image.service';
@@ -28,15 +28,15 @@ import { UpdateTeamDto } from '@modules/teams/dto/update-team.dto';
 import { Team } from '@modules/teams/domain/entities/team.entity';
 import { Player } from '@modules/players/domain/entities/player.entity';
 import { normalizeFilename } from '@common/utils/filename-normalizer.util';
-import { Permission } from '@modules/auth/domain/enums/permission.enum';
-import { RequirePermissions } from '@modules/auth/decorators/permissions.decorator';
+// import { Permission } from '@modules/auth/domain/enums/permission.enum';
+// import { RequirePermissions } from '@modules/auth/decorators/permissions.decorator';
 import { ScrapedPlayerBodyDto } from '@modules/admin/dtos/scraped-player-body.dto';
 import { CreatePlayerDto } from '@modules/players/dto/create-player.dto';
 import { PlayersService } from '@modules/players/players.service';
 
 @ApiTags('admin')
 @Controller('admin')
-@UseGuards(AdminGuard)
+// @UseGuards(AdminGuard)
 export class AdminController {
   private readonly logger = new Logger(AdminController.name);
 
@@ -47,7 +47,7 @@ export class AdminController {
     private readonly playersService: PlayersService,
   ) {}
 
-  @RequirePermissions(Permission.SCRAPE_TEAMS)
+  // @RequirePermissions(Permission.SCRAPE_TEAMS)
   @Post('scraping/:league/teams')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -102,7 +102,7 @@ export class AdminController {
     }
   }
 
-  @RequirePermissions(Permission.SCRAPE_PLAYERS)
+  // @RequirePermissions(Permission.SCRAPE_PLAYERS)
   @Post('scraping/players')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -151,7 +151,7 @@ export class AdminController {
     return result;
   }
 
-  @RequirePermissions(Permission.CREATE_TEAM)
+  // @RequirePermissions(Permission.CREATE_TEAM)
   @Post('scraping/create-team')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({
@@ -213,7 +213,7 @@ export class AdminController {
     return teamUpdated;
   }
 
-  @RequirePermissions(Permission.CREATE_PLAYER)
+  // @RequirePermissions(Permission.CREATE_PLAYER)
   @Post('scraping/create-player')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({
