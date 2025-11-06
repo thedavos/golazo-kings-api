@@ -145,7 +145,7 @@ export class AuthController {
   ): void {
     // Configuración de cookies seguras
     const appConfig = this.configService.get('app') as AppConfig;
-    const domain = appConfig.host;
+    // const domain = appConfig.host;
     const secure = appConfig.nodeEnv === 'production';
 
     // Cookie para el access token (corta duración)
@@ -155,7 +155,7 @@ export class AuthController {
       secure,
       sameSite: 'strict',
       maxAge: 15 * 60 * 1000, // 15 minutos en milisegundos
-      domain,
+      // domain,
     });
 
     // Cookie para el refresh token (larga duración)
@@ -165,22 +165,22 @@ export class AuthController {
       secure,
       sameSite: 'strict',
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 días en milisegundos
-      domain,
+      // domain,
     });
   }
 
   private clearAuthCookies(reply: FastifyReply): void {
-    const appConfig = this.configService.get('app') as AppConfig;
-    const domain = appConfig.host;
+    // const appConfig = this.configService.get('app') as AppConfig;
+    // const domain = appConfig.host;
 
     reply.clearCookie('accessToken', {
       path: '/',
-      domain,
+      // domain,
     });
 
     reply.clearCookie('refreshToken', {
       path: '/',
-      domain,
+      // domain,
     });
   }
 }
