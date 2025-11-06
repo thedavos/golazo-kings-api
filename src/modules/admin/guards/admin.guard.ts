@@ -10,9 +10,9 @@ export class AdminGuard implements CanActivate {
   ): boolean | Promise<boolean> | Observable<boolean> {
     const request = context.switchToHttp().getRequest<FastifyRequest>();
     const user = request.user;
-
+    console.log(user);
     if (user) {
-      return user.roles.some((role) => role.includes(Role.SUPER_ADMIN));
+      return user.roles.some((role) => role === Role.SUPER_ADMIN);
     }
 
     return false;
